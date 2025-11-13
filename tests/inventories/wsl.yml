@@ -23,3 +23,9 @@ all:
 
     # Machine profile for shell configuration
     shell_profile: wsl
+
+    # Test environment dotfiles configuration
+    # Clone from public GitHub repo (simulates real deployment)
+    dotfiles_repo: "{{ ansible_env.HOME }}/dotfiles-test"
+    dotfiles_repo_url: "https://github.com/MagicMicky/dotfiles.git"
+    dotfiles_branch: modern-shell-2025

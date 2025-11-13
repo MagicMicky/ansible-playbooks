@@ -74,16 +74,20 @@ run_test "Server Shell Playbook (Apply)" \
     "ansible-playbook playbooks/servers/shell.yml -i tests/inventories/ubuntu.yml"
 
 # Test 6: WSL idempotency
+# Idempotency failures should be fatal - playbooks MUST be idempotent
 run_test "WSL Playbook Idempotency" \
-    "${SCRIPT_DIR}/test-idempotency.sh playbooks/wsl/setup.yml tests/inventories/wsl.yml" || true
+    "${SCRIPT_DIR}/test-idempotency.sh playbooks/wsl/setup.yml tests/inventories/wsl.yml"
 
 # Test 7: Shell validation
+# Run as current user (testuser in Docker), not root
+# This ensures we validate the same environment where playbook installed
 run_test "Shell Configuration Validation" \
-    "sudo PATH=/root/.local/bin:\$PATH bash ${SCRIPT_DIR}/validate-shell.sh"
+    "bash ${SCRIPT_DIR}/validate-shell.sh"
 
 # Test 8: Tools check
+# Run as current user to check actual installed tools
 run_test "Installed Tools Check" \
-    "${SCRIPT_DIR}/check-tools.sh"
+    "bash ${SCRIPT_DIR}/check-tools.sh"
 
 # Summary
 echo ""
