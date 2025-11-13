@@ -100,7 +100,7 @@ test-visual: test-docker-up ## [MANUAL] Interactive visual test - apply playbook
 	@printf '$(YELLOW)Type "exit" to leave the container$(NC)\n'
 	@printf '\n'
 	@sleep 2
-	@cd tests/docker && docker compose exec -u testuser wsl-test zsh
+	@cd tests/docker && docker compose exec wsl-test zsh
 
 test-visual-server: test-docker-up ## [MANUAL] Interactive visual test - apply playbook and start shell (Server)
 	@printf '$(BLUE)╔════════════════════════════════════════════════════════╗$(NC)\n'
@@ -126,7 +126,7 @@ test-visual-server: test-docker-up ## [MANUAL] Interactive visual test - apply p
 	@printf '$(YELLOW)Type "exit" to leave the container$(NC)\n'
 	@printf '\n'
 	@sleep 2
-	@cd tests/docker && docker compose exec -u testuser server-test zsh
+	@cd tests/docker && docker compose exec server-test zsh
 
 ## ═══════════════════════════════════════════════════════════
 ## Individual Test Components (containers stay running)
