@@ -110,13 +110,13 @@ dependencies:
       dotfiles_branch: main
 ```
 
-**File: `mac-playbook-work/tasks/n26.yml`**
+**File: `mac-playbook-work/tasks/work.yml`**
 
-Keep your sensitive work configurations here. The shared role handles the base shell setup, and this handles N26-specific additions:
+Keep your sensitive work configurations here. The shared role handles the base shell setup, and this handles company-specific additions:
 
 ```yaml
 ---
-# N26-specific work configurations
+# Company-specific work configurations
 # Sensitive configs that don't belong in public dotfiles
 
 - name: Ensure work config directory exists
@@ -124,13 +124,13 @@ Keep your sensitive work configurations here. The shared role handles the base s
     path: "{{ ansible_env.HOME }}/.zsh.d"
     state: directory
 
-- name: Link N26 environment file
+- name: Link work environment file
   file:
-    src: "{{ playbook_dir }}/files/n26env.sh"
-    dest: "{{ ansible_env.HOME }}/.zsh.d/zn26env"
+    src: "{{ playbook_dir }}/files/workenv.sh"
+    dest: "{{ ansible_env.HOME }}/.zsh.d/zworkenv"
     state: link
 
-# Additional N26-specific tasks...
+# Additional company-specific tasks...
 ```
 
 ### 3. infra/ansible Integration
