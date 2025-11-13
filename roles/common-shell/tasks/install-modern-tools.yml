@@ -1,0 +1,46 @@
+---
+# Install modern shell tools
+
+- name: Install modern tools (macOS)
+  community.general.homebrew:
+    name:
+      - fzf
+      - zoxide
+      - bat
+      - eza
+      - fd
+      - ripgrep
+    state: present
+  when: is_macos
+
+- name: Install available modern tools (Debian/Ubuntu)
+  apt:
+    name:
+      - fzf
+      - ripgrep
+    state: present
+    update_cache: yes
+  become: yes
+  when: is_debian
+
+- name: Check if zoxide is installed
+  stat:
+    path: "{{ ansible_env.HOME }}/.local/bin/zoxide"
+  register: zoxide_binary
+
+- name: Install zoxide (Linux)
+  shell: curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
+  when:
+    - not is_macos
+    - not zoxide_binary.stat.exists
+  changed_when: true
+
+- name: Ensure .local/bin directory exists
+  file:
+    path: "{{ ansible_env.HOME }}/.local/bin"
+    state: directory
+    mode: '0755'
+
+# Note: bat and eza installation on Linux may require additional steps
+# They can be installed via cargo, snap, or downloaded from GitHub releases
+# For now, we'll document this and handle it separately if needed

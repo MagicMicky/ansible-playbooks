@@ -1,0 +1,26 @@
+---
+# Set zsh as default shell
+
+- name: Ensure zsh is installed
+  package:
+    name: zsh
+    state: present
+  become: yes
+  when: not is_macos  # macOS has zsh by default
+
+- name: Check current shell
+  shell: echo $SHELL
+  register: current_shell
+  changed_when: false
+
+- name: Get zsh path
+  shell: which zsh
+  register: zsh_path_result
+  changed_when: false
+
+- name: Change default shell to zsh
+  user:
+    name: "{{ ansible_env.USER }}"
+    shell: "{{ zsh_path_result.stdout }}"
+  become: yes
+  when: current_shell.stdout != zsh_path_result.stdout

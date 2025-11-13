@@ -1,0 +1,40 @@
+---
+# Starship installation tasks
+
+- name: Install Starship (macOS)
+  community.general.homebrew:
+    name: starship
+    state: present
+  when: is_macos
+
+- name: Check if Starship is installed (Linux)
+  stat:
+    path: /usr/local/bin/starship
+  register: starship_binary
+  when: not is_macos
+
+- name: Install Starship (Linux)
+  shell: curl -sS https://starship.rs/install.sh | sh -s -- -y
+  when:
+    - not is_macos
+    - not starship_binary.stat.exists
+  changed_when: true
+
+- name: Ensure .config directory exists
+  file:
+    path: "{{ ansible_env.HOME }}/.config"
+    state: directory
+    mode: '0755'
+
+- name: Check if starship config exists in dotfiles
+  stat:
+    path: "{{ starship_config_path }}"
+  register: starship_config_file
+
+- name: Link Starship configuration
+  file:
+    src: "{{ starship_config_path }}"
+    dest: "{{ ansible_env.HOME }}/.config/starship.toml"
+    state: link
+    force: yes
+  when: starship_config_file.stat.exists

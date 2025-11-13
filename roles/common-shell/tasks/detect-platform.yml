@@ -1,0 +1,18 @@
+---
+# Platform detection tasks
+
+- name: Detect operating system family
+  set_fact:
+    is_macos: "{{ ansible_os_family == 'Darwin' }}"
+    is_debian: "{{ ansible_os_family == 'Debian' }}"
+    is_redhat: "{{ ansible_os_family == 'RedHat' }}"
+    is_wsl: "{{ 'microsoft' in ansible_kernel | lower }}"
+
+- name: Display detected platform
+  debug:
+    msg: "Platform: macOS={{ is_macos }}, Debian={{ is_debian }}, RedHat={{ is_redhat }}, WSL={{ is_wsl }}"
+    verbosity: 1
+
+- name: Set platform-specific facts
+  set_fact:
+    package_manager: "{{ 'homebrew' if is_macos else ('apt' if is_debian else 'yum') }}"

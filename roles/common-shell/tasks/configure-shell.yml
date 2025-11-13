@@ -1,0 +1,71 @@
+---
+# Shell configuration tasks
+
+- name: Ensure .config/shell directory exists
+  file:
+    path: "{{ ansible_env.HOME }}/.config/shell"
+    state: directory
+    mode: '0755'
+
+- name: Set machine type marker
+  copy:
+    content: "{{ machine_profile }}"
+    dest: "{{ machine_type_file }}"
+    mode: '0644'
+  when: machine_profile is defined
+
+- name: Set pro profile marker (work laptop)
+  copy:
+    content: ""
+    dest: "{{ enable_pro_file }}"
+    mode: '0644'
+  when: machine_profile == "work"
+
+- name: Check if dotfiles repository exists
+  stat:
+    path: "{{ dotfiles_repo }}"
+  register: dotfiles_dir
+
+- name: Clone dotfiles repository
+  git:
+    repo: "{{ dotfiles_repo_url }}"
+    dest: "{{ dotfiles_repo }}"
+    version: "{{ dotfiles_branch }}"
+    update: yes
+  when:
+    - dotfiles_repo_url is defined
+    - dotfiles_repo_url != ""
+    - not dotfiles_dir.stat.exists
+
+- name: Check if new .zshrc exists in dotfiles
+  stat:
+    path: "{{ dotfiles_repo }}/zsh/.zshrc"
+  register: zshrc_file
+
+- name: Backup existing .zshrc if it exists
+  copy:
+    src: "{{ ansible_env.HOME }}/.zshrc"
+    dest: "{{ ansible_env.HOME }}/.zshrc.backup-{{ ansible_date_time.epoch }}"
+    remote_src: yes
+  when:
+    - zshrc_file.stat.exists
+    - ansible_env.HOME + '/.zshrc' is exists
+  failed_when: false
+
+- name: Link new .zshrc
+  file:
+    src: "{{ dotfiles_repo }}/zsh/.zshrc"
+    dest: "{{ ansible_env.HOME }}/.zshrc"
+    state: link
+    force: yes
+  when: zshrc_file.stat.exists
+
+- name: Ensure .zsh.d directory exists
+  file:
+    path: "{{ ansible_env.HOME }}/.zsh.d"
+    state: directory
+    mode: '0755'
+
+- name: Include set-zsh-shell tasks
+  include_tasks: set-zsh-shell.yml
+  when: set_default_shell | default(true)

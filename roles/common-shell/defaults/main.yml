@@ -1,0 +1,37 @@
+---
+# common-shell role default variables
+
+# Machine profile: personal, work, server, wsl
+machine_profile: personal
+
+# Dotfiles configuration
+dotfiles_repo: "{{ ansible_env.HOME }}/Development/dotfiles"
+dotfiles_repo_url: ""  # Set in playbook
+dotfiles_branch: main
+
+# Modern tools to install
+install_starship: true
+install_fzf: true
+install_zoxide: true
+install_bat: true
+install_eza: true
+install_fd: true
+install_ripgrep: true
+
+# Skip heavy tools on servers
+skip_heavy_tools: "{{ machine_profile in ['server', 'prod', 'dev-server', 'gaming-server', 'dedicated-server', 'homelab'] }}"
+
+# Zinit configuration
+zinit_install: true
+zinit_home: "{{ ansible_env.HOME }}/.local/share/zinit"
+
+# Machine detection
+machine_type_file: "{{ ansible_env.HOME }}/.config/shell/machine-type"
+enable_pro_file: "{{ ansible_env.HOME }}/.config/shell/laptop-pro"
+
+# Starship configuration
+starship_config_path: "{{ dotfiles_repo }}/starship/starship.toml"
+
+# Shell configuration
+set_default_shell: true
+shell_path: /usr/bin/zsh

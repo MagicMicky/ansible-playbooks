@@ -1,0 +1,21 @@
+---
+# Zinit setup tasks
+
+- name: Ensure zinit parent directory exists
+  file:
+    path: "{{ zinit_home }}"
+    state: directory
+    mode: '0755'
+
+- name: Check if zinit is already installed
+  stat:
+    path: "{{ zinit_home }}/zinit.git"
+  register: zinit_installation
+
+- name: Clone zinit repository
+  git:
+    repo: https://github.com/zdharma-continuum/zinit.git
+    dest: "{{ zinit_home }}/zinit.git"
+    version: main
+    update: no
+  when: not zinit_installation.stat.exists

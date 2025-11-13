@@ -1,0 +1,25 @@
+---
+# Main tasks for common-shell role
+
+- name: Include platform detection
+  include_tasks: detect-platform.yml
+  tags: ['always']
+
+- name: Include Starship installation
+  include_tasks: install-starship.yml
+  when: install_starship | default(true)
+  tags: ['starship', 'prompt']
+
+- name: Include modern tools installation
+  include_tasks: install-modern-tools.yml
+  when: not (skip_heavy_tools | default(false))
+  tags: ['tools', 'modern-tools']
+
+- name: Include Zinit setup
+  include_tasks: setup-zinit.yml
+  when: zinit_install | default(true)
+  tags: ['zinit', 'plugins']
+
+- name: Include shell configuration
+  include_tasks: configure-shell.yml
+  tags: ['config', 'dotfiles']
