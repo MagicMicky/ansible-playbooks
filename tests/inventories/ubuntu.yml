@@ -1,0 +1,18 @@
+---
+# Test inventory for standard Ubuntu environment
+# Used for general playbook testing in Docker containers
+
+all:
+  hosts:
+    localhost:
+      ansible_connection: local
+      ansible_python_interpreter: /usr/bin/python3
+
+  vars:
+    # Skip homebrew on Ubuntu
+    configure_homebrew: false
+
+    # Test user settings
+    ansible_user: testuser
+    ansible_become: yes
+    ansible_become_method: sudo

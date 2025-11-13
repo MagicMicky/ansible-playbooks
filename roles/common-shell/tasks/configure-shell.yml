@@ -42,6 +42,11 @@
     path: "{{ dotfiles_repo }}/zsh/.zshrc"
   register: zshrc_file
 
+- name: Check if existing .zshrc exists
+  stat:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+  register: existing_zshrc
+
 - name: Backup existing .zshrc if it exists
   copy:
     src: "{{ ansible_env.HOME }}/.zshrc"
@@ -49,7 +54,7 @@
     remote_src: yes
   when:
     - zshrc_file.stat.exists
-    - ansible_env.HOME + '/.zshrc' is exists
+    - existing_zshrc.stat.exists
   failed_when: false
 
 - name: Link new .zshrc

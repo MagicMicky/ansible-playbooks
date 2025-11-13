@@ -1,0 +1,25 @@
+---
+# Test inventory for WSL environment simulation
+# Used for testing WSL playbook in Docker with WSL environment variables
+
+all:
+  hosts:
+    localhost:
+      ansible_connection: local
+      ansible_python_interpreter: /usr/bin/python3
+
+  vars:
+    # Skip homebrew on Ubuntu/WSL
+    configure_homebrew: false
+
+    # Test user settings
+    ansible_user: testuser
+    ansible_become: yes
+    ansible_become_method: sudo
+
+    # WSL-specific environment variables (set via docker compose)
+    # WSL_DISTRO_NAME: Ubuntu-22.04
+    # WSL_INTEROP: /run/WSL/interop
+
+    # Machine profile for shell configuration
+    shell_profile: wsl

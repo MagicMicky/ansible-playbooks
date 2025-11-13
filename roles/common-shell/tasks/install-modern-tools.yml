@@ -13,13 +13,21 @@
     state: present
   when: is_macos
 
+# Update apt cache (always runs, even in check mode to avoid package lookup failures)
+- name: Update apt cache (Debian/Ubuntu)
+  apt:
+    update_cache: yes
+  become: yes
+  when: is_debian
+  check_mode: no
+  changed_when: false
+
 - name: Install available modern tools (Debian/Ubuntu)
   apt:
     name:
       - fzf
       - ripgrep
     state: present
-    update_cache: yes
   become: yes
   when: is_debian
 

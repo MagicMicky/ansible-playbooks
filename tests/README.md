@@ -1,18 +1,44 @@
 # Testing Guide
 
-**Purpose**: Guide for testing Ansible playbooks locally using Docker containers before deployment.
+Comprehensive testing documentation for Ansible playbooks repository.
+
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Quick Start](#quick-start)
+- [Docker Testing](#docker-testing)
+- [Test Scripts](#test-scripts)
+- [Mac Testing](#mac-testing)
+- [CI/CD Integration](#cicd-integration)
+- [Makefile Commands](#makefile-commands)
+- [Troubleshooting](#troubleshooting)
 
 ---
 
 ## Overview
 
-This directory contains resources for testing Ansible playbooks in isolated Docker environments. Testing in containers allows you to validate playbooks safely before running them on real machines.
+This testing infrastructure provides safe, reproducible testing of Ansible playbooks before deployment to real machines.
 
-**Benefits**:
-- Safe testing without affecting your actual machines
-- Fast iteration during development
-- Reproducible test environments
-- Platform-specific testing (Ubuntu, WSL-like, etc.)
+**Key Features**:
+- Docker-based testing for Linux playbooks (WSL, servers)
+- Automated validation scripts for syntax, idempotency, and shell configuration
+- GitHub Actions CI/CD for automated testing on every commit
+- Manual checklist for macOS playbooks
+- Pre-commit hooks for code quality
+
+**What Can Be Tested in Docker**:
+- ✅ WSL playbook (`playbooks/wsl/setup.yml`)
+- ✅ Server playbooks (`playbooks/servers/*.yml`)
+- ✅ common-shell role (Linux parts)
+- ✅ Syntax validation for all playbooks
+- ✅ Idempotency testing
+
+**What Requires Real Mac**:
+- ❌ Mac playbooks (`playbooks/mac/*.yml`) - macOS-specific APIs
+- ❌ Homebrew installations
+- ❌ macOS system preferences
 
 ---
 
@@ -21,358 +47,681 @@ This directory contains resources for testing Ansible playbooks in isolated Dock
 ### Prerequisites
 
 ```bash
-# Install Docker
+# Install Docker and Docker Compose
 # macOS (via Homebrew)
 brew install --cask docker
 
-# Ubuntu/Debian
+# Ubuntu/Debian/WSL
 sudo apt-get update
-sudo apt-get install docker.io docker-compose
+sudo apt-get install docker.io docker-compose-plugin
 
 # Verify installation
 docker --version
-docker-compose --version
+docker compose version
 ```
 
-### Basic Testing Workflow
+### Understanding the Test Commands
+
+**IMPORTANT**: Test commands fall into different categories:
+
+| Command Type | Container Behavior | Use When |
+|--------------|-------------------|----------|
+| `make test` | Starts → Tests → **Stops** | Full validation before deployment |
+| `make test-syntax` | **No containers** | Quick syntax check |
+| `make test-wsl` | Starts → **Leaves running** | Testing specific playbook |
+| `make test-docker-shell` | Enters container | Debugging test issues |
+| `make clean` | **Stops & removes** | Cleanup after testing |
+
+**Key Differences**:
+
+- **`test-syntax`**: Fast, no Docker, just validates YAML syntax
+- **`test`** (alias for `test-all`): Full suite, automatically cleans up
+- **`test-wsl`**, **`test-server`**: Individual playbook tests, containers stay running for debugging
+- **`test-idempotency`**: Runs playbook TWICE, ensures 2nd run makes no changes
+- **`test-shell-validation`**: Checks installed tools, startup time, config files
+- **`test-docker-shell`**: Opens interactive bash for manual debugging
+
+### Running Tests (Using Makefile)
+
+The easiest way to run tests is using the provided Makefile:
 
 ```bash
-# 1. Navigate to tests directory
-cd ~/Development/terminal_improvements/ansible-playbooks/tests
+# Show all available commands (with categories)
+make help
 
-# 2. Build test container
-docker build -t ansible-test-ubuntu:latest -f Dockerfile.ubuntu .
+# Recommended: Full test suite (cleans up automatically)
+make test
 
-# 3. Run container
-docker run -it --rm \
-  -v $(pwd)/..:/ansible \
-  -w /ansible \
-  ansible-test-ubuntu:latest bash
+# Quick syntax check (no Docker needed)
+make test-syntax
 
-# 4. Inside container, run playbook in check mode
-ansible-playbook playbooks/wsl/setup.yml --check -vv
+# Individual tests (containers stay running for debugging)
+make test-wsl                 # Apply WSL playbook in container
+make test-server              # Apply server playbook
+make test-idempotency         # Verify idempotency
+make test-shell-validation    # Check shell config
 
-# 5. If check passes, run for real
-ansible-playbook playbooks/wsl/setup.yml -vv
+# Debugging
+make test-docker-shell        # Open bash inside container
+make clean                    # Stop and remove all containers
 ```
 
----
-
-## Docker Test Images
-
-### Ubuntu Test Container
-
-**File**: `Dockerfile.ubuntu`
-
-```dockerfile
-FROM ubuntu:22.04
-
-# Install dependencies
-RUN apt-get update && apt-get install -y \
-    git \
-    python3 \
-    python3-pip \
-    sudo \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Ansible
-RUN pip3 install ansible
-
-# Create test user
-RUN useradd -m -s /bin/bash testuser && \
-    echo "testuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-
-USER testuser
-WORKDIR /home/testuser
-
-CMD ["/bin/bash"]
-```
-
-**Usage**:
-```bash
-# Build
-docker build -t ansible-test-ubuntu:latest -f tests/Dockerfile.ubuntu .
-
-# Run playbook test
-docker run -it --rm \
-  -v $(pwd):/ansible \
-  -w /ansible \
-  ansible-test-ubuntu:latest \
-  ansible-playbook playbooks/wsl/setup.yml --check
-```
-
-### macOS Simulation Container
-
-**Note**: True macOS containers aren't possible, but we can test shell configs in Ubuntu:
+### Manual Testing Workflow
 
 ```bash
-# Test shell setup role
-docker run -it --rm \
-  -v $(pwd):/ansible \
-  -w /ansible \
-  ansible-test-ubuntu:latest \
-  ansible-playbook playbooks/servers/shell.yml --check
-```
-
----
-
-## Testing Specific Playbooks
-
-### WSL Playbook
-
-```bash
-# Full test with verbose output
-docker run -it --rm \
-  -v $(pwd):/ansible \
-  -w /ansible \
-  ansible-test-ubuntu:latest \
-  ansible-playbook playbooks/wsl/setup.yml --check -vv
-
-# Test specific tags
-docker run -it --rm \
-  -v $(pwd):/ansible \
-  -w /ansible \
-  ansible-test-ubuntu:latest \
-  ansible-playbook playbooks/wsl/setup.yml --check --tags shell
-```
-
-### Server Playbooks
-
-```bash
-# Test base server setup
-docker run -it --rm \
-  -v $(pwd):/ansible \
-  -w /ansible \
-  ansible-test-ubuntu:latest \
-  ansible-playbook playbooks/servers/base.yml -i tests/inventory-test.yml --check
-
-# Test shell setup
-docker run -it --rm \
-  -v $(pwd):/ansible \
-  -w /ansible \
-  ansible-test-ubuntu:latest \
-  ansible-playbook playbooks/servers/shell.yml -i tests/inventory-test.yml --check
-```
-
-### Mac Playbooks
-
-**Note**: Mac playbooks cannot be fully tested in Docker (macOS-specific tasks will fail). Instead:
-
-1. **Syntax validation**: Already done in Phase 6
-2. **Shell role testing**: Test common-shell in Ubuntu container
-3. **Real testing**: Use `--check` mode on actual Mac
-
-```bash
-# On actual Mac
+# 1. Navigate to ansible-playbooks directory
 cd ~/Development/terminal_improvements/ansible-playbooks
-ansible-playbook playbooks/mac/personal.yml -i inventories/localhost -K --check
+
+# 2. Install dependencies
+ansible-galaxy install -r requirements.yml
+
+# 3. Build Docker test containers
+cd tests/docker
+docker compose build
+
+# 4. Start containers
+docker compose up -d
+
+# 5. Run tests inside container
+docker compose exec ubuntu-test ./tests/scripts/run-all-tests.sh
+
+# 6. Stop containers when done
+docker compose down
 ```
 
 ---
 
-## Test Inventory
+## Docker Testing
 
-**File**: `tests/inventory-test.yml`
+### Container Architecture
+
+Three specialized containers for different testing scenarios:
+
+| Container | Purpose | Environment Variables |
+|-----------|---------|----------------------|
+| `ubuntu-test` | General Ubuntu testing | Standard Ubuntu 22.04 |
+| `wsl-test` | WSL playbook simulation | `WSL_DISTRO_NAME=Ubuntu-22.04` |
+| `server-test` | Server playbook testing | `hostname=dev-test-01` |
+
+### Docker Files
+
+**Dockerfile.ubuntu** (`tests/docker/Dockerfile.ubuntu`):
+- Base: Ubuntu 22.04
+- Includes: Python3, Ansible, git, zsh, sudo, build-essential
+- Test user: `testuser` with passwordless sudo
+
+**docker-compose.yml** (`tests/docker/docker-compose.yml`):
+- Orchestrates all three test containers
+- Mounts repository to `/ansible` in containers
+- Keeps containers running for repeated test execution
+
+### Using Docker Containers
+
+```bash
+# Start containers
+cd tests/docker
+docker compose up -d
+
+# Execute commands in containers
+docker compose exec ubuntu-test bash                  # Interactive shell
+docker compose exec -T wsl-test <command>            # Run command directly
+
+# Test specific playbook
+docker compose exec wsl-test ansible-playbook playbooks/wsl/setup.yml -i tests/inventories/wsl.yml
+
+# Check container logs
+docker compose logs ubuntu-test
+
+# Stop containers
+docker compose down
+
+# Rebuild containers (after Dockerfile changes)
+docker compose build --no-cache
+```
+
+---
+
+## Test Scripts
+
+All test scripts located in `tests/scripts/` and executable.
+
+### 1. validate-syntax.sh
+
+Validates syntax of all Ansible playbooks.
+
+```bash
+# Usage
+./tests/scripts/validate-syntax.sh
+
+# What it does
+# - Finds all *.yml files in playbooks/
+# - Runs ansible-playbook --syntax-check on each
+# - Reports PASS/FAIL for each playbook
+# - Exits with non-zero status if any fail
+```
+
+### 2. validate-shell.sh
+
+Validates shell configuration after playbook execution.
+
+```bash
+# Usage (run inside container after applying playbook)
+./tests/scripts/validate-shell.sh
+
+# What it checks
+# - Shell startup time (target: <200ms in container)
+# - Essential tools: starship, fzf, zoxide, ripgrep
+# - Laptop tools: bat, eza, fd (if not server profile)
+# - Starship configuration file exists
+# - Zinit installation
+# - Zsh configuration
+```
+
+### 3. test-playbook.sh
+
+Generic playbook test runner with timing.
+
+```bash
+# Usage
+./tests/scripts/test-playbook.sh <playbook> <inventory> [--check]
+
+# Examples
+./tests/scripts/test-playbook.sh playbooks/wsl/setup.yml tests/inventories/wsl.yml
+./tests/scripts/test-playbook.sh playbooks/servers/base.yml tests/inventories/ubuntu.yml --check
+
+# What it does
+# - Validates playbook and inventory exist
+# - Runs playbook with verbose output (-vv)
+# - Reports execution time
+# - Exits with playbook's exit status
+```
+
+### 4. test-idempotency.sh
+
+Tests playbook idempotency (no changes on second run).
+
+```bash
+# Usage
+./tests/scripts/test-idempotency.sh <playbook> <inventory>
+
+# Example
+./tests/scripts/test-idempotency.sh playbooks/wsl/setup.yml tests/inventories/wsl.yml
+
+# What it does
+# - Runs playbook twice
+# - Verifies second run has changed=0
+# - PASSES if no changes on second run
+# - FAILS if changes detected
+```
+
+### 5. check-tools.sh
+
+Lists installed tools and their versions.
+
+```bash
+# Usage
+./tests/scripts/check-tools.sh
+
+# What it shows
+# - Essential tools (git, zsh, starship, fzf, zoxide, ripgrep)
+# - Development tools (bat, eza, fd)
+# - Server tools (docker, docker-compose)
+# - Build tools (make, gcc, curl, wget)
+# - Configuration files status
+```
+
+### 6. run-all-tests.sh
+
+Master test runner - executes complete test suite.
+
+```bash
+# Usage
+./tests/scripts/run-all-tests.sh
+
+# Test sequence
+# 1. Install Ansible dependencies
+# 2. Syntax validation
+# 3. WSL playbook (check mode)
+# 4. WSL playbook (apply)
+# 5. Server shell playbook (check mode)
+# 6. Server shell playbook (apply)
+# 7. Idempotency test
+# 8. Shell validation
+# 9. Tools check
+
+# Exit status
+# - 0: All tests passed
+# - 1: One or more tests failed
+```
+
+---
+
+## Test Inventories
+
+Located in `tests/inventories/`.
+
+### ubuntu.yml
+
+Standard Ubuntu environment for general testing.
 
 ```yaml
 all:
   hosts:
-    test-server:
+    localhost:
       ansible_connection: local
-      ansible_user: testuser
-      machine_type: server
-
+      ansible_python_interpreter: /usr/bin/python3
   vars:
-    ansible_python_interpreter: /usr/bin/python3
+    configure_homebrew: false
+    ansible_user: testuser
+    ansible_become: yes
 ```
 
----
+### wsl.yml
 
-## Validation Scripts
-
-### Syntax Check Script
-
-**File**: `tests/validate-syntax.sh`
-
-```bash
-#!/bin/bash
-
-set -e
-
-echo "Validating all playbooks..."
-
-playbooks=(
-  "playbooks/mac/personal.yml"
-  "playbooks/mac/work.yml"
-  "playbooks/wsl/setup.yml"
-  "playbooks/servers/base.yml"
-  "playbooks/servers/shell.yml"
-)
-
-for playbook in "${playbooks[@]}"; do
-  echo "Checking $playbook..."
-  ansible-playbook "$playbook" --syntax-check
-  echo "✓ $playbook is valid"
-done
-
-echo ""
-echo "All playbooks passed syntax validation!"
-```
-
-**Usage**:
-```bash
-chmod +x tests/validate-syntax.sh
-./tests/validate-syntax.sh
-```
-
-### Role Test Script
-
-**File**: `tests/test-role.sh`
-
-```bash
-#!/bin/bash
-
-ROLE=$1
-
-if [ -z "$ROLE" ]; then
-  echo "Usage: ./tests/test-role.sh <role-name>"
-  echo "Example: ./tests/test-role.sh common-shell"
-  exit 1
-fi
-
-echo "Testing role: $ROLE"
-
-docker run -it --rm \
-  -v $(pwd):/ansible \
-  -w /ansible \
-  ansible-test-ubuntu:latest \
-  ansible-playbook tests/test-playbook-${ROLE}.yml --check -vv
-```
-
-**Usage**:
-```bash
-chmod +x tests/test-role.sh
-./tests/test-role.sh common-shell
-```
-
----
-
-## Testing Checklist
-
-Before deploying to real machines, complete this checklist:
-
-- [ ] All playbooks pass syntax validation (`validate-syntax.sh`)
-- [ ] WSL playbook tested in Ubuntu container (check mode)
-- [ ] Server playbooks tested in Ubuntu container (check mode)
-- [ ] Mac playbooks tested in check mode on actual Mac
-- [ ] common-shell role tested in container
-- [ ] Dependencies installed via `ansible-galaxy install -r requirements.yml`
-- [ ] No errors in verbose output (`-vv`)
-- [ ] Idempotency verified (run twice, second run shows no changes)
-
----
-
-## Docker Compose Setup
-
-**File**: `tests/docker-compose.yml`
+WSL environment simulation with WSL-specific variables.
 
 ```yaml
-version: '3.8'
-
-services:
-  ubuntu-test:
-    build:
-      context: ..
-      dockerfile: tests/Dockerfile.ubuntu
-    volumes:
-      - ..:/ansible
-    working_dir: /ansible
-    command: tail -f /dev/null
-
-  wsl-test:
-    build:
-      context: ..
-      dockerfile: tests/Dockerfile.ubuntu
-    volumes:
-      - ..:/ansible
-    working_dir: /ansible
-    environment:
-      - WSL_DISTRO_NAME=Ubuntu
-    command: tail -f /dev/null
+all:
+  hosts:
+    localhost:
+      ansible_connection: local
+  vars:
+    shell_profile: wsl
+    # WSL_DISTRO_NAME set via docker-compose environment
 ```
 
-**Usage**:
+### servers.yml
+
+Multiple server types for machine detection testing.
+
+```yaml
+all:
+  children:
+    production_servers:
+      hosts:
+        prod-web-01:
+          expected_prompt_char: "!"
+          expected_prompt_color: red
+    dev_servers:
+      hosts:
+        dev-test-01:
+          expected_prompt_char: "·"
+          expected_prompt_color: orange
+```
+
+---
+
+## Mac Testing
+
+Mac playbooks cannot be fully tested in Docker. Use the manual validation checklist.
+
+### Mac Validation Process
+
+1. **Read the checklist**: `tests/mac-validation-checklist.md`
+2. **Backup**: Create Time Machine backup
+3. **Check mode**: Run playbook with `--check` flag
+4. **Apply**: Run playbook on test Mac (old MacBook recommended)
+5. **Validate**: Follow checklist steps to verify all changes
+6. **Test idempotency**: Run playbook second time, verify no changes
+
+### Quick Mac Commands
+
 ```bash
-# Start all test containers
-docker-compose -f tests/docker-compose.yml up -d
+# Personal Mac (check mode)
+ansible-playbook playbooks/mac/personal.yml -i inventories/localhost -K --check
 
-# Run tests in ubuntu-test container
-docker-compose -f tests/docker-compose.yml exec ubuntu-test \
-  ansible-playbook playbooks/servers/base.yml --check
+# Personal Mac (apply)
+ansible-playbook playbooks/mac/personal.yml -i inventories/localhost -K
 
-# Stop containers
-docker-compose -f tests/docker-compose.yml down
+# Work Mac (check mode)
+ansible-playbook playbooks/mac/work.yml -i inventories/localhost -K --check
+
+# Work Mac (apply)
+ansible-playbook playbooks/mac/work.yml -i inventories/localhost -K
+```
+
+### What to Validate on Mac
+
+- Shell startup time (<100ms target)
+- Starship prompt rendering (λ character, correct color)
+- Modern tools installed (starship, fzf, zoxide, bat, eza, fd)
+- Homebrew packages installed
+- macOS preferences applied (Dock, Finder, Trackpad, etc.)
+- Application configs (Sublime, iTerm2, Vim)
+- Git configuration
+- Work-specific tools (work Mac only: terraform, kubectl, helm, k9s)
+
+See `tests/mac-validation-checklist.md` for complete checklist.
+
+---
+
+## CI/CD Integration
+
+### GitHub Actions Workflow
+
+**File**: `.github/workflows/test-playbooks.yml`
+
+Runs automatically on:
+- Push to `main` or `develop` branches
+- Pull requests to `main` or `develop`
+- Manual trigger via GitHub UI
+
+**Jobs**:
+1. **syntax-check**: Validates all playbook syntax
+2. **ansible-lint**: Runs ansible-lint for best practices
+3. **test-ubuntu**: Tests WSL and server playbooks in Ubuntu
+4. **test-idempotency**: Verifies playbooks are idempotent
+5. **summary**: Aggregates results and reports pass/fail
+
+**Viewing Results**:
+- Go to repository on GitHub
+- Click "Actions" tab
+- View workflow runs and logs
+
+### Pre-commit Hooks
+
+**File**: `.pre-commit-config.yaml`
+
+Runs automatically before every git commit (after setup).
+
+**Setup**:
+```bash
+# Install pre-commit
+pip install pre-commit
+
+# Install hooks
+pre-commit install
+
+# Run manually on all files
+pre-commit run --all-files
+```
+
+**Hooks**:
+- Trailing whitespace removal
+- End-of-file fixer
+- YAML validation
+- YAML linting (yamllint)
+- Ansible linting (ansible-lint)
+- Shell script linting (shellcheck)
+- Markdown linting
+
+**Bypass** (not recommended):
+```bash
+git commit --no-verify -m "message"
+```
+
+---
+
+## Makefile Commands
+
+Convenient commands for testing and deployment.
+
+### Testing Commands
+
+```bash
+make help                  # Show all available commands
+make test                  # Run complete test suite
+make test-syntax           # Syntax validation only
+make test-docker-build     # Build Docker containers
+make test-docker-up        # Start Docker containers
+make test-docker-down      # Stop Docker containers
+make test-docker-shell     # Open shell in ubuntu-test container
+make test-wsl              # Test WSL playbook
+make test-server           # Test server playbooks
+make test-idempotency      # Test idempotency
+make test-shell            # Validate shell configuration
+make lint                  # Run ansible-lint
+make lint-fix              # Run pre-commit hooks
+make clean                 # Clean up test containers and artifacts
+```
+
+### Deployment Commands
+
+```bash
+make deps                  # Install Ansible Galaxy dependencies
+make install               # Install pre-commit hooks
+
+# Mac playbooks
+make mac-personal-check    # Check mode for personal Mac
+make mac-personal          # Apply personal Mac playbook
+make mac-work-check        # Check mode for work Mac
+make mac-work              # Apply work Mac playbook
+
+# WSL playbook
+make wsl-setup             # Apply WSL setup
+
+# Server playbooks (requires INVENTORY variable)
+make server-base INVENTORY=path/to/inventory
+make server-shell INVENTORY=path/to/inventory
+```
+
+### Documentation Commands
+
+```bash
+make docs                  # Open documentation
+make status                # Show project status
 ```
 
 ---
 
 ## Troubleshooting
 
-### Container Permission Issues
+### Docker Container Issues
 
-If you encounter permission errors:
+**Problem**: Containers won't start
+
 ```bash
-# Run container as root
-docker run -it --rm --user root \
-  -v $(pwd):/ansible \
-  -w /ansible \
-  ansible-test-ubuntu:latest bash
+# Check Docker is running
+docker ps
+
+# View container logs
+cd tests/docker
+docker compose logs ubuntu-test
+
+# Rebuild containers
+docker compose build --no-cache
+docker compose up -d
 ```
 
-### Ansible Not Found
+**Problem**: Permission errors in container
 
 ```bash
-# Install Ansible in container
-pip3 install ansible
+# Containers run as testuser by default
+# Check file permissions in mounted volume
+ls -la /ansible
 
-# Or rebuild container
-docker build --no-cache -t ansible-test-ubuntu:latest -f tests/Dockerfile.ubuntu .
+# If needed, change ownership on host
+sudo chown -R $USER:$USER .
 ```
 
-### Volume Mount Issues
+**Problem**: Ansible not found in container
 
 ```bash
-# Use absolute paths
-docker run -it --rm \
-  -v /home/user/Development/terminal_improvements/ansible-playbooks:/ansible \
-  -w /ansible \
-  ansible-test-ubuntu:latest bash
+# Rebuild container (Ansible should be in Dockerfile)
+cd tests/docker
+docker compose build --no-cache ubuntu-test
+```
+
+### Playbook Test Failures
+
+**Problem**: Playbook fails in check mode but not documented
+
+```bash
+# Run with increased verbosity
+ansible-playbook <playbook> -i <inventory> --check -vvv
+
+# Check for:
+# - Missing variables
+# - Incorrect inventory settings
+# - Role dependencies not installed
+```
+
+**Problem**: Idempotency test fails
+
+```bash
+# Identify which tasks changed on second run
+ansible-playbook <playbook> -i <inventory> -vv | grep changed
+
+# Common causes:
+# - Templates with timestamps
+# - Commands without "creates" or "changed_when"
+# - File permissions not properly set
+# - Git clones without version pinning
+```
+
+**Problem**: Shell validation fails
+
+```bash
+# Check what failed
+./tests/scripts/validate-shell.sh
+
+# Common issues:
+# - Tool not installed (check role tasks)
+# - Configuration file missing (check role templates)
+# - Shell startup time too slow (profile plugin loading)
+```
+
+### CI/CD Issues
+
+**Problem**: GitHub Actions failing
+
+```bash
+# View logs on GitHub:
+# Repository → Actions → Failed workflow → Click job → View logs
+
+# Common causes:
+# - Syntax errors in playbooks
+# - ansible-lint warnings elevated to errors
+# - Missing dependencies in requirements.yml
+# - Ubuntu package installation failures
+```
+
+**Problem**: Pre-commit hooks failing
+
+```bash
+# See what failed
+pre-commit run --all-files
+
+# Fix specific hook
+pre-commit run ansible-lint --all-files
+
+# Skip temporarily (not recommended)
+git commit --no-verify
+```
+
+### Performance Issues
+
+**Problem**: Shell startup time too slow
+
+```bash
+# Measure startup time
+time zsh -i -c exit
+
+# Profile zinit plugins
+zinit times
+
+# Disable heavy plugins in profile config
+# Edit: roles/common-shell/templates/zshrc.j2
+```
+
+**Problem**: Tests take too long
+
+```bash
+# Run specific tests instead of full suite
+make test-syntax           # Fast (~10s)
+make test-wsl             # Medium (~2min)
+make test-all             # Slow (~5min)
+
+# Skip idempotency tests during development
+./tests/scripts/test-playbook.sh <playbook> <inventory> --check
 ```
 
 ---
 
-## Next Steps
+## Testing Best Practices
 
-After Docker testing passes:
+### Before Committing Code
 
-1. **Review** - Review all test output for warnings
-2. **Deploy to WSL** - Lowest risk, current machine
-3. **Deploy to old Mac** - Test macOS-specific tasks
-4. **Deploy to test server** - Validate server configs
-5. **Gradual rollout** - Deploy to remaining machines
+1. Run syntax validation: `make test-syntax`
+2. Run pre-commit hooks: `pre-commit run --all-files`
+3. Test affected playbooks: `make test-wsl` or `make test-server`
+4. Review verbose output for warnings
 
-See `TESTING_CHECKLIST.md` for complete deployment procedures.
+### Before Deploying to Real Machines
+
+1. Run complete test suite: `make test`
+2. Review GitHub Actions results (if pushed)
+3. Test on lowest-risk machine first (WSL or old Mac)
+4. Run playbook in check mode on target machine
+5. Apply playbook with verbose output
+6. Validate using appropriate checklist
+
+### Development Workflow
+
+```bash
+# 1. Make changes to playbook or role
+vim roles/common-shell/tasks/main.yml
+
+# 2. Test syntax
+make test-syntax
+
+# 3. Test in Docker
+make test-docker-build
+make test-wsl
+
+# 4. Review output
+docker compose -f tests/docker/docker-compose.yml logs ubuntu-test
+
+# 5. Iterate until tests pass
+
+# 6. Run pre-commit hooks
+pre-commit run --all-files
+
+# 7. Commit
+git add .
+git commit -m "feat: update common-shell role"
+
+# 8. Push (triggers CI/CD)
+git push
+```
+
+---
+
+## Performance Benchmarks
+
+### Expected Test Times
+
+| Test | Duration | Notes |
+|------|----------|-------|
+| Syntax validation | 5-10s | Fast, no containers |
+| Docker build | 1-2min | First build only, cached after |
+| WSL playbook test | 1-3min | Includes tool installations |
+| Server playbook test | 1-2min | Minimal profile, faster |
+| Idempotency test | 2-4min | Runs playbook twice |
+| Complete suite | 5-8min | All tests sequentially |
+
+### Shell Startup Targets
+
+| Environment | Target | Baseline (Prezto) |
+|-------------|--------|-------------------|
+| Laptop | <100ms | 200-300ms |
+| Server | <50ms | N/A |
+| Container | <200ms | N/A (overhead) |
 
 ---
 
 ## Resources
 
-- [Ansible Testing Strategies](https://docs.ansible.com/ansible/latest/reference_appendices/test_strategies.html)
-- [Docker Documentation](https://docs.docker.com/)
-- [Molecule](https://molecule.readthedocs.io/) - Advanced Ansible testing framework
-- [Ansible Lint](https://ansible-lint.readthedocs.io/) - Best practices linter
+- **Ansible Docs**: [Testing Strategies](https://docs.ansible.com/ansible/latest/reference_appendices/test_strategies.html)
+- **Docker Docs**: [Docker Compose](https://docs.docker.com/compose/)
+- **Ansible Lint**: [Documentation](https://ansible-lint.readthedocs.io/)
+- **Pre-commit**: [Framework](https://pre-commit.com/)
+- **GitHub Actions**: [Workflow Syntax](https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions)
 
 ---
 
-**Status**: Template created, containers not yet built
-**Next**: Create Dockerfile.ubuntu and test with WSL playbook
+**Testing Infrastructure Status**: ✅ Complete (Phase 8-9)
+
+**Last Updated**: 2025-01-13
+
+For deployment procedures, see `STATUS.md` and main `README.md`.

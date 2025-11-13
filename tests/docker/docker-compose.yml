@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # Standard Ubuntu test environment
+  ubuntu-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.ubuntu
+    image: ansible-playbooks-test:ubuntu
+    container_name: ansible-test-ubuntu
+    volumes:
+      - ../../:/ansible:rw
+    working_dir: /ansible
+    command: tail -f /dev/null  # Keep container running
+    environment:
+      - ANSIBLE_FORCE_COLOR=1
+      - ANSIBLE_HOST_KEY_CHECKING=False
+
+  # WSL simulation environment
+  wsl-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.ubuntu
+    image: ansible-playbooks-test:ubuntu
+    container_name: ansible-test-wsl
+    volumes:
+      - ../../:/ansible:rw
+    working_dir: /ansible
+    command: tail -f /dev/null
+    environment:
+      - ANSIBLE_FORCE_COLOR=1
+      - ANSIBLE_HOST_KEY_CHECKING=False
+      - WSL_DISTRO_NAME=Ubuntu-22.04
+      - WSL_INTEROP=/run/WSL/interop
+
+  # Server environment (for testing server playbooks)
+  server-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.ubuntu
+    image: ansible-playbooks-test:ubuntu
+    container_name: ansible-test-server
+    volumes:
+      - ../../:/ansible:rw
+    working_dir: /ansible
+    command: tail -f /dev/null
+    environment:
+      - ANSIBLE_FORCE_COLOR=1
+      - ANSIBLE_HOST_KEY_CHECKING=False
+    hostname: dev-test-01

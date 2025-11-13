@@ -13,7 +13,7 @@ configure_osx: yes
 configure_work: no  # Personal machine
 
 # Dotfiles configuration
-dotfiles_repo: git@github.com:MagicMicky/dotfiles.git
+dotfiles_repo: https://github.com/MagicMicky/dotfiles.git
 dotfiles_repo_accept_hostkey: yes
 dotfiles_repo_version: modern-shell-2025
 dotfiles_repo_local_destination: ~/Development/terminal_improvements/dotfiles
