@@ -12,7 +12,6 @@
 
 - name: Include modern tools installation
   include_tasks: install-modern-tools.yml
-  when: not (skip_heavy_tools | default(false))
   tags: ['tools', 'modern-tools']
 
 - name: Include Zinit setup
