@@ -1,0 +1,30 @@
+# Ansible Galaxy installed roles (managed via requirements.yml)
+# These should NOT be committed - they're external dependencies
+roles/geerlingguy.*
+roles/elliotweiser.*
+roles/work-tasks
+
+# Ansible retry files
+*.retry
+
+# Python bytecode
+*.pyc
+__pycache__/
+
+# Testing artifacts
+.pytest_cache/
+.ansible_cache/
+
+# Editor/IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+
+# Temporary files
+*.tmp
+*.bak
