@@ -209,13 +209,20 @@ Validates shell configuration after playbook execution.
 ./tests/scripts/validate-shell.sh
 
 # What it checks
-# - Shell startup time (target: <200ms in container)
-# - Essential tools: starship, fzf, zoxide, ripgrep
-# - Laptop tools: bat, eza, fd (if not server profile)
-# - Starship configuration file exists
-# - Zinit installation
-# - Zsh configuration
+# 1. Shell Startup: Verifies zsh starts without errors (detects path issues)
+# 2. Essential Tools: starship, fzf, zoxide, ripgrep
+# 3. Laptop Tools: bat, eza, fd (optional, if not server profile)
+# 4. Starship Configuration: ~/.config/starship.toml exists
+# 5. Zinit Installation: ~/.local/share/zinit/zinit.git/ exists
+# 6. Zsh Configuration: ~/.zshrc exists and is readable
+# 7. Dotfiles Content: Verifies dotfiles directory is accessible
+#    - Resolves symlink to find dotfiles location
+#    - Checks core/*.zsh files exist
+#    - Verifies profiles/ directory structure
+#    - Confirms starship config in dotfiles
 ```
+
+**Key Feature**: Section 7 (Dotfiles Content) is critical for detecting path resolution issues. It verifies that the dynamically resolved `DOTFILES_DIR` actually contains the expected files, preventing "no matches found" errors that occur when paths are misconfigured.
 
 ### 3. test-playbook.sh
 
@@ -601,7 +608,71 @@ ansible-playbook <playbook> -i <inventory> -vv | grep changed
 # - Tool not installed (check role tasks)
 # - Configuration file missing (check role templates)
 # - Shell startup time too slow (profile plugin loading)
+# - Dotfiles path resolution errors (see below)
 ```
+
+**Problem**: Dotfiles path resolution errors ("no matches found")
+
+This typically manifests as:
+```
+/home/testuser/.zshrc:10: no matches found: /home/testuser/Development/dotfiles/zsh/core/*.zsh
+```
+
+**Root Cause**: The `.zshrc` cannot find the dotfiles directory.
+
+**How It Works**:
+1. Ansible creates symlink: `~/.zshrc` → `{{ dotfiles_repo }}/zsh/.zshrc`
+2. Shell sources `~/.zshrc` which resolves its own location via symlink
+3. `.zshrc` determines `DOTFILES_DIR` dynamically (not hardcoded)
+4. All config files are sourced from `$DOTFILES_DIR/zsh/core/*.zsh`
+
+**Validation**:
+```bash
+# Check symlink exists
+ls -la ~/.zshrc
+# Expected: ~/.zshrc -> /path/to/dotfiles/zsh/.zshrc
+
+# Verify dotfiles directory exists
+readlink -f ~/.zshrc | xargs dirname | xargs dirname
+# Expected: /home/testuser/dotfiles-test (in tests)
+# Expected: /home/user/Development/dotfiles (production)
+
+# Check core files exist
+DOTFILES=$(readlink -f ~/.zshrc | xargs dirname | xargs dirname)
+ls -la $DOTFILES/zsh/core/
+# Expected: 6 .zsh files (00-detect.zsh through 40-functions.zsh)
+
+# Test shell startup manually
+zsh -i -c 'echo "DOTFILES_DIR=$DOTFILES_DIR"'
+# Should show resolved path, not error
+```
+
+**Debugging**:
+```bash
+# Inside container/test environment
+docker compose exec wsl-test bash
+
+# Check what ansible created
+ls -la /home/testuser/.zshrc
+ls -la /home/testuser/dotfiles-test/
+
+# Test .zshrc directly
+su - testuser
+zsh -i
+
+# If you see "ERROR: Dotfiles directory not found"
+# - Verify ansible cloned/copied dotfiles
+# - Check dotfiles_repo variable in inventory
+# - Verify symlink target matches actual location
+```
+
+**Why Tests Previously Missed This**:
+- Old validation script had `|| echo "0:00.00"` fallback
+- This masked shell startup errors
+- New validation (Section 7) explicitly checks dotfiles content
+- New error detection catches "no matches found" messages
+
+**Fixed in**: Shell validation v2 (with dotfiles content checks)
 
 ### CI/CD Issues
 
