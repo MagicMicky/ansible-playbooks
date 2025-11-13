@@ -13,7 +13,7 @@
   handlers:
     - name: Restart Dock
       shell: killall Dock
-      failed_when: false
+      failed_when: false  # OK to fail: Dock may not be running (headless, CI)
 
   pre_tasks:
     - name: Display deployment information

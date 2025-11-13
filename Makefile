@@ -80,9 +80,12 @@ test-visual: test-docker-up ## [MANUAL] Interactive visual test - apply playbook
 	@printf '$(BLUE)╚════════════════════════════════════════════════════════╝$(NC)\n'
 	@printf '\n'
 	@printf '$(YELLOW)Step 1:$(NC) Applying WSL playbook to install everything...\n'
-	@cd tests/docker && docker compose exec -T wsl-test ansible-playbook playbooks/wsl/setup.yml -i tests/inventories/wsl.yml || true
+	@if cd tests/docker && docker compose exec -T wsl-test ansible-playbook playbooks/wsl/setup.yml -i tests/inventories/wsl.yml; then \
+		printf '\n$(GREEN)✅ Setup complete!$(NC)\n'; \
+	else \
+		printf '\n$(RED)⚠️  Playbook had errors, but launching shell for debugging...$(NC)\n'; \
+	fi
 	@printf '\n'
-	@printf '$(GREEN)✅ Setup complete!$(NC)\n'
 	@printf '\n'
 	@printf '$(YELLOW)Step 2:$(NC) Launching interactive shell...\n'
 	@printf '$(YELLOW)You will now see:$(NC)\n'
@@ -108,9 +111,12 @@ test-visual-server: test-docker-up ## [MANUAL] Interactive visual test - apply p
 	@printf '$(BLUE)╚════════════════════════════════════════════════════════╝$(NC)\n'
 	@printf '\n'
 	@printf '$(YELLOW)Step 1:$(NC) Applying server shell playbook...\n'
-	@cd tests/docker && docker compose exec -T server-test ansible-playbook playbooks/servers/shell.yml -i tests/inventories/ubuntu.yml || true
+	@if cd tests/docker && docker compose exec -T server-test ansible-playbook playbooks/servers/shell.yml -i tests/inventories/ubuntu.yml; then \
+		printf '\n$(GREEN)✅ Setup complete!$(NC)\n'; \
+	else \
+		printf '\n$(RED)⚠️  Playbook had errors, but launching shell for debugging...$(NC)\n'; \
+	fi
 	@printf '\n'
-	@printf '$(GREEN)✅ Setup complete!$(NC)\n'
 	@printf '\n'
 	@printf '$(YELLOW)Step 2:$(NC) Launching interactive shell...\n'
 	@printf '$(YELLOW)You will now see:$(NC)\n'
@@ -155,7 +161,8 @@ test-shell-validation: test-docker-up ## [VALIDATION] Check shell config (startu
 
 lint: ## Run ansible-lint on playbooks
 	@printf '$(BLUE)Running ansible-lint...$(NC)\n'
-	ansible-lint playbooks/ || true
+	@printf '$(YELLOW)Note: Warnings are informational, errors should be fixed$(NC)\n'
+	@ansible-lint playbooks/ || (printf '$(YELLOW)⚠️  Lint issues found (see above)$(NC)\n'; exit 0)
 
 lint-fix: ## Run pre-commit hooks on all files
 	@printf '$(BLUE)Running pre-commit hooks...$(NC)\n'

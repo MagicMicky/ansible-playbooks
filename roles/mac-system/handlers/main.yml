@@ -1,10 +1,11 @@
 ---
 # Handlers for mac-system role
+# Note: These are best-effort operations that may fail in headless/CI environments
 
 - name: Restart Dock
   shell: killall Dock
-  failed_when: false
+  failed_when: false  # OK to fail: Dock may not be running (headless, CI)
 
 - name: Set dark mode
   shell: osascript -e 'tell application "System Events" to tell appearance preferences to set dark mode to not dark mode'
-  failed_when: false
+  failed_when: false  # OK to fail: May not work in headless/CI environments
