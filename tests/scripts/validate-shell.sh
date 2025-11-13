@@ -38,37 +38,62 @@ test_command() {
 # 1. Test shell startup time
 echo "1. Shell Startup Time"
 if [ -x "$(command -v zsh)" ]; then
-    # Check if /usr/bin/time exists
-    if command -v /usr/bin/time > /dev/null 2>&1; then
-        # Measure startup time (run 3 times, take average)
-        total=0
-        runs=3
-        for i in $(seq 1 $runs); do
-            time_output=$(/usr/bin/time -f "%E" zsh -i -c exit 2>&1 || echo "0:00.00")
-            time_ms=$(echo "$time_output" | awk -F'[:.]+' '{if (NF >= 3) print ($1 * 60000) + ($2 * 1000) + ($3 * 10); else print 0}')
-            # Handle empty or invalid output
-            if [ -z "$time_ms" ] || [ "$time_ms" -eq 0 ]; then
-                time_ms=100  # Default reasonable value
-            fi
-            total=$((total + time_ms))
-        done
-        avg_time=$((total / runs))
-
-        echo "  Average startup time: ${avg_time}ms"
-
-        # Check against target (100ms for laptop, 50ms for server)
-        # For testing, we'll use 200ms as reasonable threshold in container
-        if [ $avg_time -lt 200 ]; then
-            echo -e "  ${GREEN}✓ Startup time acceptable${NC}"
-            PASSED=$((PASSED + 1))
+    # First, test if shell can start at all (detect errors)
+    stderr_file=$(mktemp)
+    if zsh -i -c exit 2>"$stderr_file"; then
+        # Check stderr for common errors
+        if grep -qi "error\|no matches found\|no such file" "$stderr_file"; then
+            echo -e "  ${RED}✗ zsh started but reported errors:${NC}"
+            cat "$stderr_file" | sed 's/^/    /'
+            rm -f "$stderr_file"
+            FAILED=$((FAILED + 1))
+            # Skip timing test since shell has errors
         else
-            echo -e "  ${YELLOW}⚠ Startup time slower than expected (target: <200ms in container)${NC}"
-            # Don't fail, just warn
+            rm -f "$stderr_file"
+            echo -e "  ${GREEN}✓ zsh starts without errors${NC}"
             PASSED=$((PASSED + 1))
+
+            # Now measure startup time
+            if command -v /usr/bin/time > /dev/null 2>&1; then
+                # Measure startup time (run 3 times, take average)
+                total=0
+                runs=3
+                for i in $(seq 1 $runs); do
+                    time_output=$(/usr/bin/time -f "%E" zsh -i -c exit 2>&1)
+                    time_ms=$(echo "$time_output" | awk -F'[:.]+' '{if (NF >= 3) print ($1 * 60000) + ($2 * 1000) + ($3 * 10); else print 0}')
+                    # Handle empty or invalid output
+                    if [ -z "$time_ms" ] || [ "$time_ms" -eq 0 ]; then
+                        time_ms=100  # Default reasonable value
+                    fi
+                    total=$((total + time_ms))
+                done
+                avg_time=$((total / runs))
+
+                echo "  Average startup time: ${avg_time}ms"
+
+                # Check against target (100ms for laptop, 50ms for server)
+                # For testing, we'll use 200ms as reasonable threshold in container
+                if [ $avg_time -lt 200 ]; then
+                    echo -e "  ${GREEN}✓ Startup time acceptable${NC}"
+                    PASSED=$((PASSED + 1))
+                else
+                    echo -e "  ${YELLOW}⚠ Startup time slower than expected (target: <200ms in container)${NC}"
+                    # Don't fail, just warn
+                    PASSED=$((PASSED + 1))
+                fi
+            else
+                echo -e "  ${YELLOW}⚠ /usr/bin/time not available, skipping timing measurement${NC}"
+                PASSED=$((PASSED + 1))
+            fi
         fi
     else
-        echo -e "  ${YELLOW}⚠ /usr/bin/time not available, skipping startup time test${NC}"
-        PASSED=$((PASSED + 1))
+        echo -e "  ${RED}✗ zsh failed to start (exit code: $?)${NC}"
+        if [ -s "$stderr_file" ]; then
+            echo "  Errors:"
+            cat "$stderr_file" | sed 's/^/    /'
+        fi
+        rm -f "$stderr_file"
+        FAILED=$((FAILED + 1))
     fi
 else
     echo -e "  ${RED}✗ zsh not found${NC}"
@@ -178,6 +203,65 @@ if [ -f "$HOME/.zshrc" ] || [ -L "$HOME/.zshrc" ]; then
 else
     echo -e "  ${RED}✗${NC} .zshrc missing"
     FAILED=$((FAILED + 1))
+fi
+echo ""
+
+# 7. Test dotfiles content accessibility
+echo "7. Dotfiles Content"
+if [ -L "$HOME/.zshrc" ]; then
+    ZSHRC_TARGET=$(readlink -f "$HOME/.zshrc")
+    DOTFILES_DIR=$(dirname $(dirname "$ZSHRC_TARGET"))
+
+    echo -e "  ${GREEN}✓${NC} .zshrc is symlinked"
+    echo "    Target: $ZSHRC_TARGET"
+    echo "    Dotfiles: $DOTFILES_DIR"
+    PASSED=$((PASSED + 1))
+
+    # Verify dotfiles directory exists
+    if [ -d "$DOTFILES_DIR" ]; then
+        echo -e "  ${GREEN}✓${NC} Dotfiles directory exists"
+        PASSED=$((PASSED + 1))
+    else
+        echo -e "  ${RED}✗${NC} Dotfiles directory missing: $DOTFILES_DIR"
+        FAILED=$((FAILED + 1))
+    fi
+
+    # Verify core files exist
+    if [ -d "$DOTFILES_DIR/zsh/core" ]; then
+        CORE_COUNT=$(ls -1 "$DOTFILES_DIR/zsh/core"/*.zsh 2>/dev/null | wc -l)
+        if [ "$CORE_COUNT" -gt 0 ]; then
+            echo -e "  ${GREEN}✓${NC} Found $CORE_COUNT core/*.zsh files"
+            PASSED=$((PASSED + 1))
+        else
+            echo -e "  ${RED}✗${NC} No core/*.zsh files found in $DOTFILES_DIR/zsh/core"
+            FAILED=$((FAILED + 1))
+        fi
+    else
+        echo -e "  ${RED}✗${NC} core/ directory missing: $DOTFILES_DIR/zsh/core"
+        FAILED=$((FAILED + 1))
+    fi
+
+    # Verify profiles directory exists
+    if [ -d "$DOTFILES_DIR/zsh/profiles" ]; then
+        echo -e "  ${GREEN}✓${NC} profiles/ directory exists"
+        PASSED=$((PASSED + 1))
+    else
+        echo -e "  ${RED}✗${NC} profiles/ directory missing: $DOTFILES_DIR/zsh/profiles"
+        FAILED=$((FAILED + 1))
+    fi
+
+    # Verify starship config exists
+    if [ -f "$DOTFILES_DIR/starship/starship.toml" ]; then
+        echo -e "  ${GREEN}✓${NC} Starship config exists in dotfiles"
+        PASSED=$((PASSED + 1))
+    else
+        echo -e "  ${YELLOW}⚠${NC} Starship config missing from dotfiles (optional)"
+        PASSED=$((PASSED + 1))  # Don't fail
+    fi
+else
+    echo -e "  ${YELLOW}⚠${NC} .zshrc is not a symlink (unexpected)"
+    echo "    Cannot verify dotfiles content accessibility"
+    PASSED=$((PASSED + 1))  # Don't fail, just warn
 fi
 echo ""
 
