@@ -79,10 +79,60 @@ ansible-playbooks/
 │   ├── ROLES.md           # Role documentation
 │   └── INTEGRATION.md     # Integration with existing playbooks
 │
+├── tests/                 # Testing infrastructure
+│   ├── docker/            # Docker test containers
+│   ├── scripts/           # Validation scripts
+│   ├── inventories/       # Test inventories
+│   ├── README.md          # Complete testing guide
+│   └── mac-validation-checklist.md
+│
+├── .github/workflows/     # CI/CD automation
+│   └── test-playbooks.yml # GitHub Actions workflow
+│
 ├── requirements.yml       # Galaxy dependencies
 ├── ansible.cfg            # Ansible configuration
+├── Makefile               # Testing & deployment commands
 └── README.md              # This file
 ```
+
+## Testing
+
+Complete Docker-based testing infrastructure with CI/CD automation.
+
+### Quick Testing
+
+```bash
+# Run syntax validation
+make test-syntax
+
+# Run complete Docker test suite
+make test
+
+# Test specific components
+make test-wsl           # Test WSL playbook
+make test-server        # Test server playbooks
+make test-idempotency   # Verify idempotency
+```
+
+### Mac Testing
+
+Mac playbooks require manual testing on actual Mac hardware:
+
+```bash
+# Check mode (dry run)
+make mac-personal-check
+
+# Apply playbook
+make mac-personal
+```
+
+See `tests/mac-validation-checklist.md` for complete Mac testing procedures.
+
+### Testing Documentation
+
+- **[tests/README.md](tests/README.md)** - Complete testing guide (Docker, CI/CD, validation)
+- **[tests/mac-validation-checklist.md](tests/mac-validation-checklist.md)** - Mac testing procedures
+- **[Makefile](Makefile)** - 25+ convenient testing and deployment commands
 
 ## What's New
 
@@ -131,10 +181,16 @@ One definition, multiple uses:
 
 ## Documentation
 
-- **[MIGRATION.md](docs/MIGRATION.md)** - Migrate from old structure
+### Playbook & Role Documentation
 - **[PLAYBOOKS.md](docs/PLAYBOOKS.md)** - Playbook usage guide
 - **[ROLES.md](docs/ROLES.md)** - Role documentation
 - **[INTEGRATION.md](docs/INTEGRATION.md)** - Integration guide
+- **[MIGRATION.md](docs/MIGRATION.md)** - Migrate from old structure
+
+### Testing & Deployment
+- **[tests/README.md](tests/README.md)** - Complete testing guide
+- **[tests/mac-validation-checklist.md](tests/mac-validation-checklist.md)** - Mac testing procedures
+- **[STATUS.md](STATUS.md)** - Project status and completion metrics
 
 ## Requirements
 
@@ -237,5 +293,6 @@ MIT
 
 ---
 
-**Last Updated**: 2025-11-13
-**Status**: Phase 1-4 Complete, Ready for Testing
+**Last Updated**: 2025-01-13
+**Status**: Phases 0-9 Complete (95%), Testing Infrastructure Ready
+**Next**: Production Rollout (Phase 10) - See [STATUS.md](STATUS.md)
