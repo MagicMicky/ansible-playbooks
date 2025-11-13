@@ -123,8 +123,17 @@ echo ""
 # 5. Test zinit installation
 echo "5. Zinit Plugin Manager"
 if [ -d "$HOME/.local/share/zinit/zinit.git" ]; then
-    echo -e "  ${GREEN}✓${NC} zinit installed"
+    echo -e "  ${GREEN}✓${NC} zinit directory exists"
     PASSED=$((PASSED + 1))
+
+    # Verify zinit actually works
+    if [ -f "$HOME/.local/share/zinit/zinit.git/zinit.zsh" ]; then
+        echo -e "  ${GREEN}✓${NC} zinit.zsh file present"
+        PASSED=$((PASSED + 1))
+    else
+        echo -e "  ${RED}✗${NC} zinit.zsh missing (broken installation)"
+        FAILED=$((FAILED + 1))
+    fi
 else
     echo -e "  ${RED}✗${NC} zinit not found"
     FAILED=$((FAILED + 1))
@@ -133,9 +142,39 @@ echo ""
 
 # 6. Test zsh configuration
 echo "6. Zsh Configuration"
-if [ -f "$HOME/.zshrc" ]; then
+if [ -f "$HOME/.zshrc" ] || [ -L "$HOME/.zshrc" ]; then
     echo -e "  ${GREEN}✓${NC} .zshrc exists"
     PASSED=$((PASSED + 1))
+
+    # Verify .zshrc is readable
+    if [ -r "$HOME/.zshrc" ]; then
+        echo -e "  ${GREEN}✓${NC} .zshrc is readable"
+        PASSED=$((PASSED + 1))
+    else
+        echo -e "  ${RED}✗${NC} .zshrc exists but not readable"
+        FAILED=$((FAILED + 1))
+    fi
+
+    # If it's a symlink, verify target exists
+    if [ -L "$HOME/.zshrc" ]; then
+        target=$(readlink "$HOME/.zshrc")
+        if [ -f "$target" ]; then
+            echo -e "  ${GREEN}✓${NC} .zshrc symlink target exists: $target"
+            PASSED=$((PASSED + 1))
+        else
+            echo -e "  ${RED}✗${NC} .zshrc symlink broken, target missing: $target"
+            FAILED=$((FAILED + 1))
+        fi
+    fi
+
+    # Verify .zshrc has content
+    if [ -s "$HOME/.zshrc" ]; then
+        echo -e "  ${GREEN}✓${NC} .zshrc has content"
+        PASSED=$((PASSED + 1))
+    else
+        echo -e "  ${RED}✗${NC} .zshrc is empty"
+        FAILED=$((FAILED + 1))
+    fi
 else
     echo -e "  ${RED}✗${NC} .zshrc missing"
     FAILED=$((FAILED + 1))

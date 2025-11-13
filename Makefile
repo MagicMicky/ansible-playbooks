@@ -15,6 +15,7 @@ help: ## Show this help message
 	@printf '$(YELLOW)Quick Start:$(NC)\n'
 	@printf '  make test-syntax          # Fast syntax check (no Docker)\n'
 	@printf '  make test                 # Full test suite in Docker\n'
+	@printf '  make test-visual          # INTERACTIVE: See the shell in action\n'
 	@printf '  make mac-personal         # Deploy to personal Mac\n'
 	@printf '\n'
 	@printf '$(YELLOW)All Commands:$(NC)\n'
@@ -23,6 +24,7 @@ help: ## Show this help message
 	@printf '$(YELLOW)Notes:$(NC)\n'
 	@printf '  - Individual tests (test-wsl, test-server) leave containers running\n'
 	@printf '  - Use "make clean" to stop and remove containers\n'
+	@printf '  - Use "make test-visual" to see Starship prompt interactively\n'
 	@printf '  - Use "make test-docker-shell" to debug inside container\n'
 	@printf '\n'
 
@@ -71,6 +73,60 @@ test-docker-shell: ## [DEBUG] Open interactive shell in test container
 	@printf '$(BLUE)Opening shell in ubuntu-test container...$(NC)\n'
 	@printf '$(YELLOW)Tip: Type "exit" to leave container$(NC)\n'
 	cd tests/docker && docker compose exec ubuntu-test /bin/bash
+
+test-visual: test-docker-up ## [MANUAL] Interactive visual test - apply playbook and start shell (WSL)
+	@printf '$(BLUE)╔════════════════════════════════════════════════════════╗$(NC)\n'
+	@printf '$(BLUE)║   Interactive Visual Testing - WSL Environment        ║$(NC)\n'
+	@printf '$(BLUE)╚════════════════════════════════════════════════════════╝$(NC)\n'
+	@printf '\n'
+	@printf '$(YELLOW)Step 1:$(NC) Applying WSL playbook to install everything...\n'
+	@cd tests/docker && docker compose exec -T wsl-test ansible-playbook playbooks/wsl/setup.yml -i tests/inventories/wsl.yml || true
+	@printf '\n'
+	@printf '$(GREEN)✅ Setup complete!$(NC)\n'
+	@printf '\n'
+	@printf '$(YELLOW)Step 2:$(NC) Launching interactive shell...\n'
+	@printf '$(YELLOW)You will now see:$(NC)\n'
+	@printf '  - Starship prompt (λ character for WSL)\n'
+	@printf '  - Color coding (blue/cyan theme)\n'
+	@printf '  - Git integration (if in git directory)\n'
+	@printf '  - Modern tools (fzf, zoxide, etc.)\n'
+	@printf '\n'
+	@printf '$(YELLOW)Try these commands:$(NC)\n'
+	@printf '  cd /ansible && ls          # See project files\n'
+	@printf '  starship --version         # Verify Starship installed\n'
+	@printf '  echo $$MACHINE_TYPE         # Check machine type detection\n'
+	@printf '  fzf --version              # Check modern tools\n'
+	@printf '\n'
+	@printf '$(YELLOW)Type "exit" to leave the container$(NC)\n'
+	@printf '\n'
+	@sleep 2
+	@cd tests/docker && docker compose exec -u testuser wsl-test zsh
+
+test-visual-server: test-docker-up ## [MANUAL] Interactive visual test - apply playbook and start shell (Server)
+	@printf '$(BLUE)╔════════════════════════════════════════════════════════╗$(NC)\n'
+	@printf '$(BLUE)║   Interactive Visual Testing - Server Environment     ║$(NC)\n'
+	@printf '$(BLUE)╚════════════════════════════════════════════════════════╝$(NC)\n'
+	@printf '\n'
+	@printf '$(YELLOW)Step 1:$(NC) Applying server shell playbook...\n'
+	@cd tests/docker && docker compose exec -T server-test ansible-playbook playbooks/servers/shell.yml -i tests/inventories/ubuntu.yml || true
+	@printf '\n'
+	@printf '$(GREEN)✅ Setup complete!$(NC)\n'
+	@printf '\n'
+	@printf '$(YELLOW)Step 2:$(NC) Launching interactive shell...\n'
+	@printf '$(YELLOW)You will now see:$(NC)\n'
+	@printf '  - Starship prompt (· middle dot for dev server)\n'
+	@printf '  - Minimal config (servers use lightweight setup)\n'
+	@printf '  - Hostname: dev-test-01\n'
+	@printf '\n'
+	@printf '$(YELLOW)Try these commands:$(NC)\n'
+	@printf '  hostname                   # Should show "dev-test-01"\n'
+	@printf '  echo $$MACHINE_TYPE         # Check machine type detection\n'
+	@printf '  starship config            # See minimal Starship config\n'
+	@printf '\n'
+	@printf '$(YELLOW)Type "exit" to leave the container$(NC)\n'
+	@printf '\n'
+	@sleep 2
+	@cd tests/docker && docker compose exec -u testuser server-test zsh
 
 ## ═══════════════════════════════════════════════════════════
 ## Individual Test Components (containers stay running)

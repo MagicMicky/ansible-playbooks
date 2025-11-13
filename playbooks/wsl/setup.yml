@@ -9,9 +9,9 @@
 
   vars:
     machine_profile: wsl
-    dotfiles_repo: "{{ ansible_env.HOME }}/Development/terminal_improvements/dotfiles"
-    dotfiles_repo_url: ""  # Already cloned, don't re-clone
-    dotfiles_branch: modern-shell-2025
+    # dotfiles_repo can be overridden in inventory for testing
+    # Use inventory value if set, otherwise use default local path
+    # Don't define if already set in inventory (avoid recursion)
 
     # Modern tools installation
     install_starship: true
