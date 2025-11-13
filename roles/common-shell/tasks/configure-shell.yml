@@ -55,6 +55,7 @@
       2. Repository is cloned (or set dotfiles_repo_url to auto-clone)
       3. In Docker tests: repo should be mounted at /ansible/dotfiles
     success_msg: "Dotfiles repository found at {{ dotfiles_repo }}"
+  when: not ansible_check_mode or dotfiles_dir_check.stat.exists
 
 - name: Check if new .zshrc exists in dotfiles
   stat:
@@ -72,6 +73,7 @@
       The dotfiles repository exists but is missing the .zshrc file.
       Please ensure you're on the correct branch ({{ dotfiles_branch }})
     success_msg: "Found .zshrc at {{ dotfiles_repo }}/zsh/.zshrc"
+  when: not ansible_check_mode or zshrc_file.stat.exists
 
 - name: Check if existing .zshrc exists
   stat:
@@ -107,7 +109,9 @@
   stat:
     path: "{{ ansible_env.HOME }}/.zshrc"
   register: zshrc_link_check
-  failed_when: not zshrc_link_check.stat.exists
+  failed_when:
+    - not ansible_check_mode
+    - not zshrc_link_check.stat.exists
 
 - name: Ensure .zsh.d directory exists
   file:
