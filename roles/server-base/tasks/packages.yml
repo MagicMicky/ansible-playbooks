@@ -1,0 +1,18 @@
+---
+# Base package installation
+# Extracted from infra/ansible/ubuntu/base/packages.yml
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  become: yes
+  when: ansible_os_family == "Debian"
+  tags: ['apt']
+
+- name: Install base packages
+  package:
+    name: "{{ base_packages }}"
+    state: present
+  become: yes
+  tags: ['base-packages']

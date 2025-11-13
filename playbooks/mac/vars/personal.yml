@@ -1,0 +1,62 @@
+---
+# Personal Mac configuration variables
+# Based on mac-dev-playbook/config.yml
+
+downloads: ~/.ansible-downloads/
+
+# Feature toggles
+configure_dotfiles: yes
+configure_vim: yes
+configure_sublime: yes
+configure_iterm: yes
+configure_osx: yes
+configure_work: no  # Personal machine
+
+# Dotfiles configuration
+dotfiles_repo: git@github.com:MagicMicky/dotfiles.git
+dotfiles_repo_accept_hostkey: yes
+dotfiles_repo_version: modern-shell-2025
+dotfiles_repo_local_destination: ~/Development/terminal_improvements/dotfiles
+dotfiles_home: "~"
+
+dotfiles_files:
+  - .gitconfig
+  - .to_be_installed
+  - .zshrc
+
+# Homebrew packages
+homebrew_installed_packages:
+  - awscli
+  - zsh
+  - git
+  - go
+  - docker
+  - gpg
+  - nmap
+  - wget
+  - jq
+  - pygments
+
+homebrew_taps:
+  - homebrew/core
+  - homebrew/cask
+
+homebrew_cask_appdir: /Applications
+homebrew_cask_apps:
+  - sublime-text
+  - vagrant
+  - visual-studio-code
+  - spotify
+  - qlmarkdown
+
+# Vim configuration
+vim_script: "~/.to_be_installed/vim/install.sh"
+
+# Package managers (empty by default, configure as needed)
+composer_packages: []
+gem_packages: []
+npm_packages: []
+pip_packages: []
+
+# Post-provision tasks
+post_provision_tasks: []

@@ -1,0 +1,49 @@
+---
+# Server Base Configuration Playbook
+# Configures base system: packages, Docker, users
+# Uses shared server-base role
+
+- name: Configure Server Base
+  hosts: all
+  become: yes
+
+  vars:
+    # User configuration
+    server_users:
+      - name: magicmicky
+        shell: /bin/zsh
+        groups: ['sudo', 'docker']
+        ssh_key: "REDACTED_SSH_KEY"
+      - name: ansible
+        groups: ['docker']
+        ssh_key: "REDACTED_SSH_KEY"
+
+    # Package configuration
+    install_docker: true
+
+  pre_tasks:
+    - name: Display deployment information
+      debug:
+        msg: |
+          Configuring base system for {{ inventory_hostname }}
+          Installing: packages, Docker, users
+
+  roles:
+    - role: server-base
+      tags: ['base', 'packages', 'docker', 'users']
+
+  post_tasks:
+    - name: Display completion message
+      debug:
+        msg: |
+          Base server configuration complete for {{ inventory_hostname }}
+
+          Installed:
+          - Base packages: git, htop, tar, zsh, acl, unzip, curl
+          - Docker and Docker Compose
+          - Users: magicmicky, ansible (with SSH keys)
+
+          Next steps:
+          - Run shell-setup.yml to configure modern shell
+          - Verify Docker: docker ps
+          - Verify users: id magicmicky

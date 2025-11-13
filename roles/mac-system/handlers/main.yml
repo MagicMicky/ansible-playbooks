@@ -1,0 +1,10 @@
+---
+# Handlers for mac-system role
+
+- name: Restart Dock
+  shell: killall Dock
+  failed_when: false
+
+- name: Set dark mode
+  shell: osascript -e 'tell application "System Events" to tell appearance preferences to set dark mode to not dark mode'
+  failed_when: false

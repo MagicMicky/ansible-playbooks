@@ -1,0 +1,23 @@
+---
+# Default server variables
+# Used by server playbooks
+
+# Machine profile for shell configuration
+machine_profile: server
+
+# Dotfiles configuration
+dotfiles_repo: "/opt/dotfiles"
+dotfiles_repo_url: "git@github.com:MagicMicky/dotfiles.git"
+dotfiles_branch: main  # Change to modern-shell-2025 for testing
+
+# Minimal tools for servers (performance-focused)
+install_starship: true
+install_fzf: true
+install_zoxide: true
+install_bat: false       # Skip heavy tools
+install_eza: false       # Skip heavy tools
+install_fd: false        # Skip heavy tools
+install_ripgrep: true    # Useful for log searching
+skip_heavy_tools: true
+
+# Target shell startup time: <50ms

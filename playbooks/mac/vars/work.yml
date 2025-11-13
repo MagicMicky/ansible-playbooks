@@ -1,0 +1,34 @@
+---
+# Work Mac configuration variables
+# Extends personal configuration with work-specific settings
+
+# Inherit most settings from personal
+configure_work: yes  # Enable work-specific tasks
+
+# Work-specific packages (non-sensitive)
+homebrew_installed_packages:
+  - awscli
+  - zsh
+  - git
+  - go
+  - docker
+  - gpg
+  - nmap
+  - wget
+  - jq
+  - pygments
+  - terraform
+  - kubectl
+  - helm
+  - k9s
+
+# Work applications
+homebrew_cask_apps:
+  - sublime-text
+  - visual-studio-code
+  - slack
+  - zoom
+  - docker
+
+# Note: Sensitive work configurations (N26-specific) are in mac-playbook-work repo
+# This file only contains non-sensitive work tooling

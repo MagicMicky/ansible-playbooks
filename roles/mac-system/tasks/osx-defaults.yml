@@ -1,0 +1,71 @@
+---
+# macOS system defaults configuration
+# Extracted from mac-dev-playbook/tasks/osx.yml
+
+###############
+# Dock Settings
+###############
+
+- name: Dock - Set dock tilesize
+  osx_defaults:
+    domain: com.apple.dock
+    key: tilesize
+    type: float
+    value: "{{ dock_tilesize }}"
+  notify: Restart Dock
+  tags: ['dock']
+
+
+###############
+# OSX settings
+###############
+
+- name: Expand "Save" window by default
+  osx_defaults:
+    domain: NSGlobalDomain
+    key: NSNavPanelExpandedStateForSaveMode
+    type: bool
+    value: "{{ enable_save_panel_expanded }}"
+  tags: ['system-preferences']
+
+- name: Disable smart quotes
+  osx_defaults:
+    domain: NSGlobalDomain
+    key: NSAutomaticQuoteSubstitutionEnabled
+    type: bool
+    value: "{{ not disable_smart_quotes }}"
+  tags: ['system-preferences']
+
+- name: Disable smart dashes
+  osx_defaults:
+    domain: NSGlobalDomain
+    key: NSAutomaticDashSubstitutionEnabled
+    type: bool
+    value: "{{ not disable_smart_dashes }}"
+  tags: ['system-preferences']
+
+- name: Disable autocorrect
+  osx_defaults:
+    domain: NSGlobalDomain
+    key: NSAutomaticSpellingCorrectionEnabled
+    type: bool
+    value: "{{ not disable_autocorrect }}"
+  tags: ['system-preferences']
+
+- name: Show extensions in finder for all filenames
+  osx_defaults:
+    domain: NSGlobalDomain
+    key: AppleShowAllExtensions
+    type: bool
+    value: "{{ show_all_extensions }}"
+  tags: ['system-preferences', 'finder']
+
+- name: Set dark mode
+  osx_defaults:
+    domain: Apple Global Domain
+    key: AppleInterfaceStyle
+    type: string
+    value: Dark
+  notify: Set dark mode
+  when: enable_dark_mode
+  tags: ['system-preferences', 'appearance']

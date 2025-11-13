@@ -1,0 +1,36 @@
+---
+# Example server inventory
+# Copy to servers.yml and customize for your infrastructure
+
+all:
+  children:
+    production:
+      hosts:
+        prod-web-01:
+          ansible_host: 192.168.1.10
+          machine_type: prod
+        prod-db-01:
+          ansible_host: 192.168.1.11
+          machine_type: prod
+
+    development:
+      hosts:
+        dev-server-01:
+          ansible_host: 192.168.1.20
+          machine_type: dev-server
+
+    homelab:
+      hosts:
+        homelab-01:
+          ansible_host: 192.168.1.30
+          machine_type: homelab-server
+
+    gaming:
+      hosts:
+        gaming-server:
+          ansible_host: 192.168.1.40
+          machine_type: gaming-server
+
+  vars:
+    ansible_user: ansible
+    ansible_python_interpreter: /usr/bin/python3
