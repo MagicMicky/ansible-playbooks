@@ -1,0 +1,53 @@
+---
+# Server Setup Playbook
+# For servers (minimal configuration for performance)
+
+- name: Configure Server Environment
+  hosts: all
+  become: no
+
+  vars:
+    machine_profile: server
+    dotfiles_repo: "/opt/dotfiles"  # System location for servers
+    dotfiles_repo_url: "git@github.com:MagicMicky/dotfiles.git"
+    dotfiles_branch: main
+
+    # Minimal tool installation for servers
+    install_starship: true
+    install_fzf: true
+    install_zoxide: true
+    install_bat: false      # Skip on servers
+    install_eza: false      # Skip on servers
+    install_fd: false       # Skip on servers
+    install_ripgrep: true   # Useful for log searching
+
+    skip_heavy_tools: true
+
+  pre_tasks:
+    - name: Ensure prerequisites are installed
+      apt:
+        name:
+          - zsh
+          - git
+          - curl
+        state: present
+        update_cache: yes
+      become: yes
+      when: ansible_os_family == "Debian"
+      tags: ['prerequisites']
+
+  roles:
+    - role: common-shell
+      tags: ['shell']
+
+  post_tasks:
+    - name: Display server type
+      debug:
+        msg: |
+          ✅ Server configuration complete for {{ inventory_hostname }}
+
+          Machine type will be auto-detected based on hostname:
+          - prod* → Production (!)
+          - dev-* → Dev server (·)
+          - gaming* → Gaming (·)
+          - homelab* → Homelab (·)

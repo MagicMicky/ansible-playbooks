@@ -1,0 +1,46 @@
+---
+# Laptop Setup Playbook
+# For personal laptops (macOS or Linux)
+
+- name: Configure Personal Laptop
+  hosts: localhost
+  connection: local
+  become: no
+
+  vars:
+    machine_profile: personal  # or 'work' for work laptop
+    dotfiles_repo: "{{ ansible_env.HOME }}/Development/terminal_improvements/dotfiles"
+    dotfiles_repo_url: "git@github.com:MagicMicky/dotfiles.git"
+    dotfiles_branch: main  # or modern-shell-2025 for testing
+
+    # Install all modern tools on laptops
+    install_starship: true
+    install_fzf: true
+    install_zoxide: true
+    install_bat: true
+    install_eza: true
+    install_fd: true
+    install_ripgrep: true
+
+  pre_tasks:
+    - name: Display deployment information
+      debug:
+        msg: |
+          Deploying modern shell configuration to {{ ansible_os_family }} laptop
+          Machine Profile: {{ machine_profile }}
+          Dotfiles: {{ dotfiles_repo_url }}
+          Branch: {{ dotfiles_branch }}
+
+  roles:
+    - role: common-shell
+      tags: ['shell', 'dotfiles']
+
+  post_tasks:
+    - name: Display completion message
+      debug:
+        msg: |
+          ✅ Laptop configuration complete!
+
+          Start a new shell or run: exec zsh
+
+          Your prompt should show: [λ] in {{ 'cyan' if machine_profile == 'work' else 'blue' }}

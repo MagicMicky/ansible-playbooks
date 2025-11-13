@@ -1,0 +1,66 @@
+---
+# WSL Setup Playbook
+# Configures WSL environment with modern shell setup
+
+- name: Configure WSL Environment
+  hosts: localhost
+  connection: local
+  become: no
+
+  vars:
+    machine_profile: wsl
+    dotfiles_repo: "{{ ansible_env.HOME }}/Development/terminal_improvements/dotfiles"
+    dotfiles_repo_url: ""  # Already cloned, don't re-clone
+    dotfiles_branch: modern-shell-2025
+
+    # Modern tools installation
+    install_starship: true
+    install_fzf: true
+    install_zoxide: true
+    install_bat: false  # Available but not critical for WSL
+    install_eza: false  # Available but not critical for WSL
+    install_fd: false   # Available but not critical for WSL
+    install_ripgrep: true
+
+  pre_tasks:
+    - name: Display deployment information
+      debug:
+        msg: |
+          Deploying modern shell configuration to WSL
+          Machine Profile: {{ machine_profile }}
+          Dotfiles Location: {{ dotfiles_repo }}
+          Branch: {{ dotfiles_branch }}
+
+    - name: Ensure prerequisites are installed
+      apt:
+        name:
+          - zsh
+          - git
+          - curl
+          - wget
+          - build-essential
+        state: present
+        update_cache: yes
+      become: yes
+      tags: ['prerequisites']
+
+  roles:
+    - role: common-shell
+      tags: ['shell', 'dotfiles']
+
+  post_tasks:
+    - name: Display completion message
+      debug:
+        msg: |
+          ✅ WSL configuration complete!
+
+          Next steps:
+          1. Start a new shell: exec zsh
+          2. Or set as default: chsh -s $(which zsh)
+
+          On first startup:
+          - Zinit will auto-install (takes ~10 seconds)
+          - Plugins will download automatically
+          - You'll see: "🚀 Modern shell loaded | Machine: wsl"
+
+          Your prompt should show: [λ] in blue
