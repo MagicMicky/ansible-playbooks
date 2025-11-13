@@ -13,9 +13,8 @@ all:
     configure_homebrew: false
 
     # Test user settings
+    # Run as testuser by default, only use become for specific tasks that need root
     ansible_user: testuser
-    ansible_become: yes
-    ansible_become_method: sudo
 
     # Test environment dotfiles configuration
     # Clone from public GitHub repo (simulates real deployment)
