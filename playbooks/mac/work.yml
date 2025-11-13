@@ -25,7 +25,7 @@
           Branch: {{ dotfiles_repo_version }}
           Machine Profile: pro (work)
 
-          Note: Sensitive N26 configs loaded from mac-playbook-work role
+          Note: Sensitive work configs loaded from mac-playbook-work role
 
   roles:
     # Homebrew installation and package management
@@ -54,7 +54,7 @@
     # NOTE: Requires mac-playbook-work to be installed via ansible-galaxy
     - role: work-tasks
       when: configure_work
-      tags: ['work', 'n26']
+      tags: ['work']
 
   tasks:
     - name: Setup Ansible directories
@@ -91,6 +91,6 @@
           - Zinit plugin manager
           - Modern tools: fzf, zoxide, ripgrep, bat, eza, fd
           - Work tools: AWS CLI, Terraform, Kubectl, Helm, K9s
-          - N26-specific configurations loaded
+          - Company-specific configurations loaded
 
           Shell startup time: <100ms target

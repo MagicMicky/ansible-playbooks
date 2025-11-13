@@ -30,5 +30,5 @@ homebrew_cask_apps:
   - zoom
   - docker
 
-# Note: Sensitive work configurations (N26-specific) are in mac-playbook-work repo
+# Note: Sensitive company-specific configurations are in mac-playbook-work repo
 # This file only contains non-sensitive work tooling

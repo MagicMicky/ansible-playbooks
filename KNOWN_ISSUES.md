@@ -112,9 +112,9 @@ killall Finder
 **Impact**: Work playbook will fail without access
 **Expected**: By design, work configs are separate
 
-#### N26-Specific Tools
-**Consideration**: Work playbook includes N26 internal tools
-**Impact**: Tools may break if N26 infrastructure changes
+#### Company-Specific Tools
+**Consideration**: Work playbook includes company internal tools
+**Impact**: Tools may break if company infrastructure changes
 **Ownership**: Maintained separately in work repository
 
 ### infra Integration

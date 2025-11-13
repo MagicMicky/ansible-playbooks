@@ -75,7 +75,7 @@ ansible-playbook playbooks/mac/work.yml -i inventories/localhost -K -vv
 **Monitor for**:
 - [ ] Personal role tasks complete
 - [ ] Work-tasks role executes
-- [ ] N26-specific configurations applied
+- [ ] Company-specific configurations applied
 
 ---
 
@@ -178,7 +178,7 @@ brew list | grep -E "(terraform|kubectl|helm|k9s)"
 - [ ] kubectl installed
 - [ ] Helm installed
 - [ ] k9s installed
-- [ ] Work-specific tools from N26 playbook
+- [ ] Work-specific tools from work playbook
 
 ### 3.6 macOS System Preferences
 
@@ -252,7 +252,7 @@ cat ~/.gitconfig
 
 ```bash
 # Check work environment file
-cat ~/.config/zsh/profiles/pro/n26env.sh
+cat ~/.zsh.d/zworkenv
 
 # Verify work tools
 which terraform
@@ -264,7 +264,7 @@ which k9s
 echo $JENKINS_URL  # or other work-specific env vars
 ```
 
-- [ ] N26 environment variables file exists
+- [ ] Work environment variables file exists
 - [ ] Work tools installed and in PATH
 - [ ] Work-specific aliases available
 - [ ] SSO/credentials configured (if applicable)

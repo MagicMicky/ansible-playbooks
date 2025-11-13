@@ -192,7 +192,7 @@ Recommended deployment order:
 - **Improvement**: 27x increase in documentation
 
 ### Work Isolation
-- **Before**: Sensitive N26 configs at risk
+- **Before**: Sensitive work configs at risk
 - **After**: Work configs in separate private repo (mac-playbook-work/)
 - **Status**: Maintained and integrated via requirements.yml
 
@@ -348,7 +348,7 @@ See `tests/mac-validation-checklist.md` for complete Mac testing procedures.
 ### Work Integration
 - **mac-playbook-work/** - Still separate, private, untouched
 - Integrated via `requirements.yml` external role reference
-- Sensitive N26 configs remain isolated
+- Sensitive work configs remain isolated
 
 ### Infra Integration
 - **infra/ansible/ubuntu/** - Updated to use shared server-base role
