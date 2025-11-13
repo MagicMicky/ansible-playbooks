@@ -85,7 +85,16 @@
     remote_src: yes
   when:
     - existing_zshrc.stat.exists
-  failed_when: false
+  register: backup_result
+  failed_when: false  # Best effort - don't fail if backup can't be created
+
+- name: Warn if backup failed
+  debug:
+    msg: "WARNING: Could not backup existing .zshrc. Proceeding anyway."
+  when:
+    - existing_zshrc.stat.exists
+    - backup_result is defined
+    - backup_result.failed | default(false)
 
 - name: Link new .zshrc
   file:
