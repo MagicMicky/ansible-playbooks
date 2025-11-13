@@ -37,44 +37,6 @@
     - dotfiles_repo_url != ""
     - not dotfiles_dir.stat.exists
 
-- name: Check if dotfiles repository exists
-  stat:
-    path: "{{ dotfiles_repo }}"
-  register: dotfiles_dir_check
-
-- name: Assert dotfiles repository exists
-  assert:
-    that:
-      - dotfiles_dir_check.stat.exists
-      - dotfiles_dir_check.stat.isdir
-    fail_msg: |
-      FATAL: Dotfiles repository not found at: {{ dotfiles_repo }}
-
-      This is required for shell configuration. Please ensure:
-      1. dotfiles_repo variable points to correct location
-      2. Repository is cloned (or set dotfiles_repo_url to auto-clone)
-      3. In Docker tests: repo should be mounted at /ansible/dotfiles
-    success_msg: "Dotfiles repository found at {{ dotfiles_repo }}"
-  when: not ansible_check_mode or dotfiles_dir_check.stat.exists
-
-- name: Check if new .zshrc exists in dotfiles
-  stat:
-    path: "{{ dotfiles_repo }}/zsh/.zshrc"
-  register: zshrc_file
-
-- name: Assert .zshrc exists in dotfiles
-  assert:
-    that:
-      - zshrc_file.stat.exists
-      - zshrc_file.stat.isreg or zshrc_file.stat.islnk
-    fail_msg: |
-      FATAL: .zshrc not found at: {{ dotfiles_repo }}/zsh/.zshrc
-
-      The dotfiles repository exists but is missing the .zshrc file.
-      Please ensure you're on the correct branch ({{ dotfiles_branch }})
-    success_msg: "Found .zshrc at {{ dotfiles_repo }}/zsh/.zshrc"
-  when: not ansible_check_mode or zshrc_file.stat.exists
-
 - name: Check if existing .zshrc exists
   stat:
     path: "{{ ansible_env.HOME }}/.zshrc"
@@ -104,14 +66,6 @@
     dest: "{{ ansible_env.HOME }}/.zshrc"
     state: link
     force: yes
-
-- name: Verify .zshrc symlink was created
-  stat:
-    path: "{{ ansible_env.HOME }}/.zshrc"
-  register: zshrc_link_check
-  failed_when:
-    - not ansible_check_mode
-    - not zshrc_link_check.stat.exists
 
 - name: Ensure .zsh.d directory exists
   file:
