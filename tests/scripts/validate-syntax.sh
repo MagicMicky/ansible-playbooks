@@ -14,7 +14,8 @@ echo ""
 # Install dependencies if requirements.yml exists
 if [ -f "${ANSIBLE_DIR}/requirements.yml" ]; then
     echo "Installing Ansible dependencies..."
-    ansible-galaxy install -r "${ANSIBLE_DIR}/requirements.yml" > /dev/null 2>&1 || true
+    # Use --ignore-errors to skip private repos (e.g., work-tasks)
+    ansible-galaxy install -r "${ANSIBLE_DIR}/requirements.yml" --ignore-errors > /dev/null 2>&1 || true
     echo ""
 fi
 
