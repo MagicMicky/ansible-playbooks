@@ -49,7 +49,8 @@ run_test() {
 
 # Install Ansible dependencies
 echo -e "${BLUE}Installing Ansible dependencies...${NC}"
-ansible-galaxy install -r requirements.yml || true
+# Use --ignore-errors to skip private repos (e.g., work-tasks)
+ansible-galaxy install -r requirements.yml --ignore-errors || true
 echo ""
 
 # Test 1: Syntax validation

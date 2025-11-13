@@ -418,6 +418,28 @@ Runs automatically on:
 - Click "Actions" tab
 - View workflow runs and logs
 
+### Handling Private Roles in CI
+
+**Important**: The `work-tasks` role is a **private repository** and cannot be accessed by GitHub Actions.
+
+**How we handle this**:
+- All Galaxy dependency installations use `--ignore-errors` flag
+- This allows private repos to fail gracefully without breaking CI
+- CI only tests public playbooks (`wsl/setup.yml`, `servers/*.yml`)
+- Work playbook (`mac/work.yml`) is NOT tested in CI (requires manual testing)
+
+**Why it doesn't fail locally**:
+- Your local machine has SSH keys configured to access private repos
+- When you run `make test-syntax` or other commands, Galaxy can install work-tasks successfully
+
+**Tested in CI**:
+- ✅ WSL playbook
+- ✅ Server playbooks
+- ✅ Syntax validation (skips work.yml if role missing)
+
+**NOT tested in CI** (manual testing required):
+- ❌ Work playbook (`mac/work.yml`) - requires private work-tasks role
+
 ### Pre-commit Hooks
 
 **File**: `.pre-commit-config.yaml`
