@@ -1,0 +1,19 @@
+---
+# Default variables for mac-system role
+
+# Dock settings
+dock_tilesize: 45
+
+# System preferences
+enable_save_panel_expanded: true
+disable_smart_quotes: true
+disable_smart_dashes: true
+disable_autocorrect: true
+show_all_extensions: true
+enable_dark_mode: true
+
+# Font installation
+install_powerline_fonts: true
+powerline_font_repo: "git@github.com:abertsch/Menlo-for-Powerline.git"
+fonts_dir: "~/Library/Fonts"
+fonts_temp_dir: "/tmp/Menlo"

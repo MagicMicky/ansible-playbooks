@@ -1,0 +1,9 @@
+---
+# Vim configuration
+# Extracted from mac-dev-playbook/tasks/vim.yml
+
+- name: Run vim plugins and theme installation
+  shell: "{{ vim_script }}"
+  changed_when: false
+  when: vim_script is defined
+  tags: ['vim-plugins']

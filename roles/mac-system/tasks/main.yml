@@ -1,0 +1,15 @@
+---
+# Main tasks for mac-system role
+# Configures macOS system preferences and installs fonts
+
+- name: Include macOS system defaults configuration
+  import_tasks: osx-defaults.yml
+  when: ansible_os_family == "Darwin"
+  tags: ['osx', 'preferences']
+
+- name: Include font installation tasks
+  import_tasks: fonts.yml
+  when:
+    - ansible_os_family == "Darwin"
+    - install_powerline_fonts | default(true)
+  tags: ['fonts']

@@ -1,0 +1,12 @@
+---
+# iTerm2 configuration
+# Extracted from mac-dev-playbook/tasks/iterm.yml
+
+- name: Link iTerm2 preferences
+  file:
+    src: "{{ dotfiles_repo_local_destination }}/macspecial/iterms/com.googlecode.iterm2.plist"
+    dest: "~/Library/Preferences/com.googlecode.iterm2.plist"
+    state: link
+    force: yes
+  become: no
+  tags: ['iterm-settings']

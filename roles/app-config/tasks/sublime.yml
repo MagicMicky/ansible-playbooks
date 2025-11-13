@@ -1,0 +1,38 @@
+---
+# Sublime Text configuration
+# Extracted from mac-dev-playbook/tasks/sublime.yml
+
+- name: Ensure Sublime Text User folder present
+  file:
+    path: "~/Library/Application Support/Sublime Text/Packages/User"
+    state: directory
+    recurse: yes
+  tags: ['sublime-settings']
+
+- name: Remove existing Sublime Text keymap
+  file:
+    path: "~/Library/Application Support/Sublime Text/Packages/User/Default (OSX).sublime-keymap"
+    state: absent
+  tags: ['sublime-settings']
+
+- name: Link Sublime Text keymap
+  file:
+    src: "{{ dotfiles_repo_local_destination }}/macspecial/Sublime/Default (OSX).sublime-keymap"
+    dest: "~/Library/Application Support/Sublime Text/Packages/User/Default (OSX).sublime-keymap"
+    state: link
+  become: no
+  tags: ['sublime-settings']
+
+- name: Remove existing Sublime Text settings
+  file:
+    path: "~/Library/Application Support/Sublime Text/Packages/User/Preferences.sublime-settings"
+    state: absent
+  tags: ['sublime-settings']
+
+- name: Link Sublime Text settings
+  file:
+    src: "{{ dotfiles_repo_local_destination }}/macspecial/Sublime/Preferences.sublime-settings"
+    dest: "~/Library/Application Support/Sublime Text/Packages/User/Preferences.sublime-settings"
+    state: link
+  become: no
+  tags: ['sublime-settings']

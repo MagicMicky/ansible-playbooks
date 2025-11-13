@@ -1,12 +1,23 @@
 ---
-# External Ansible Galaxy role dependencies
+# Consolidated Ansible Galaxy Dependencies
+# Merged from ansible-playbooks, mac-dev-playbook, and infra requirements
 
 collections:
+  # General community modules (used across all playbooks)
   - name: community.general
     version: ">=3.0.0"
 
-roles: []
-  # Add external role dependencies here as needed
-  # Example:
-  # - name: geerlingguy.homebrew
-  #   version: "4.2.0"
+  # macOS-specific collection (for Mac playbooks)
+  - name: geerlingguy.mac
+
+roles:
+  # macOS roles (used by playbooks/mac/*.yml)
+  - name: geerlingguy.dotfiles
+  - name: elliotweiser.osx-command-line-tools
+
+  # Work-specific role (private repository)
+  # Used by playbooks/mac/work.yml
+  - src: git@github.com:MagicMicky/mac-playbook-work.git
+    name: work-tasks
+    version: master
+    scm: git

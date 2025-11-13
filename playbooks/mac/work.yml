@@ -1,0 +1,96 @@
+---
+# Work Mac Setup Playbook
+# Extends personal configuration with work-specific tooling
+# Integrates with private mac-playbook-work repository for sensitive configs
+
+- name: Configure Work Mac
+  hosts: localhost
+  connection: local
+
+  vars_files:
+    - vars/personal.yml  # Load base personal config first
+    - vars/work.yml      # Override with work-specific settings
+
+  handlers:
+    - name: Restart Dock
+      shell: killall Dock
+      failed_when: false
+
+  pre_tasks:
+    - name: Display deployment information
+      debug:
+        msg: |
+          Configuring Work Mac (Pro Profile)
+          Dotfiles: {{ dotfiles_repo }}
+          Branch: {{ dotfiles_repo_version }}
+          Machine Profile: pro (work)
+
+          Note: Sensitive N26 configs loaded from mac-playbook-work role
+
+  roles:
+    # Homebrew installation and package management
+    - role: geerlingguy.mac.homebrew
+      tags: ['homebrew', 'packages']
+
+    # Modern shell configuration with "pro" profile
+    - role: common-shell
+      vars:
+        machine_profile: pro  # Enables work-specific tools (AWS, Terraform, etc.)
+        dotfiles_repo: "{{ dotfiles_repo_local_destination }}"
+        dotfiles_repo_url: "{{ dotfiles_repo }}"
+        dotfiles_branch: "{{ dotfiles_repo_version }}"
+      tags: ['shell', 'dotfiles']
+
+    # macOS system preferences and fonts
+    - role: mac-system
+      when: configure_osx
+      tags: ['osx', 'system', 'fonts']
+
+    # Application configurations (Sublime, iTerm, Vim)
+    - role: app-config
+      tags: ['apps', 'config']
+
+    # Work-specific tasks from private repository
+    # NOTE: Requires mac-playbook-work to be installed via ansible-galaxy
+    - role: work-tasks
+      when: configure_work
+      tags: ['work', 'n26']
+
+  tasks:
+    - name: Setup Ansible directories
+      import_tasks: ../../tasks/mac/ansible-setup.yml
+      tags: ['ansible']
+
+    - name: Configure sudoers
+      import_tasks: ../../tasks/mac/sudoers.yml
+      tags: ['sudoers']
+      become: yes
+
+    - name: Install extra packages
+      import_tasks: ../../tasks/mac/extra-packages.yml
+      tags: ['packages', 'extra']
+
+    - name: Run post-provision tasks
+      include_tasks: "{{ item }}"
+      with_fileglob: "{{ post_provision_tasks | default([]) }}"
+      tags: ['post']
+
+  post_tasks:
+    - name: Display completion message
+      debug:
+        msg: |
+          Work Mac configuration complete!
+
+          Next steps:
+          1. Restart your terminal or run: exec zsh
+          2. Verify shell: echo $MACHINE_TYPE (should be "pro")
+          3. Check prompt: Should show [λ] in blue
+
+          Modern shell features enabled:
+          - Starship prompt with λ character (pro profile)
+          - Zinit plugin manager
+          - Modern tools: fzf, zoxide, ripgrep, bat, eza, fd
+          - Work tools: AWS CLI, Terraform, Kubectl, Helm, K9s
+          - N26-specific configurations loaded
+
+          Shell startup time: <100ms target

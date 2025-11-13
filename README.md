@@ -1,63 +1,140 @@
-# Ansible Shared Roles
+# Ansible Playbooks
 
-Shared Ansible roles for managing shell configuration, dotfiles, and machine profiles across multiple environments (personal laptops, work laptops, servers, WSL).
+**Consolidated repository for managing dotfiles, shell configurations, and system setup across all environments.**
 
-## Purpose
+This is the central automation repository that replaces the old `ansible-roles/` and consolidates content from `mac-dev-playbook/`. It provides:
+- ✅ Modern shell configuration (zinit, Starship, modern tools)
+- ✅ macOS system preferences and applications
+- ✅ Server base configuration (packages, Docker, users)
+- ✅ DRY architecture with 4 shared roles
+- ✅ Clear organization by platform (mac/, wsl/, servers/)
 
-These roles implement the DRY (Don't Repeat Yourself) principle by providing common configuration management that can be reused across:
-- `mac-dev-playbook` (personal Mac setup)
-- `mac-playbook-work` (work Mac setup)
-- `infra/ansible` (server configurations)
+## Quick Start
 
-## Roles
+### Personal Mac
 
-### common-shell
-Universal shell setup role that handles:
-- Platform detection (macOS, Linux, WSL)
-- Starship prompt installation and configuration
-- Modern CLI tools installation (fzf, zoxide, bat, eza, fd, ripgrep)
-- Zinit plugin manager setup
-- Machine type detection and configuration
-
-**Supported Machine Profiles:**
-- `personal` - Personal laptop
-- `work` - Work laptop
-- `server` - Servers (minimal configuration)
-- `wsl` - Windows Subsystem for Linux
-
-### dotfiles-manager
-Manages dotfiles repository cloning, linking, and updates.
-
-### machine-profile
-Handles machine-specific configuration based on detected or specified profile.
-
-## Usage
-
-### In ansible.cfg
-
-```ini
-[defaults]
-roles_path = ./roles:~/Development/ansible-roles/roles:~/.ansible/roles
+```bash
+cd ~/Development/terminal_improvements/ansible-playbooks
+ansible-galaxy install -r requirements.yml
+ansible-playbook playbooks/mac/personal.yml -i inventories/localhost -K
 ```
 
-### In Playbooks
+### Work Mac
 
-```yaml
----
-- hosts: localhost
-  vars:
-    machine_profile: personal
-    dotfiles_repo_url: "git@github.com:USER/dotfiles.git"
-    dotfiles_branch: main
-
-  roles:
-    - role: common-shell
-      tags: ['shell']
+```bash
+ansible-galaxy install -r requirements.yml
+ansible-playbook playbooks/mac/work.yml -i inventories/localhost -K
 ```
 
-## Variables
+### WSL
 
-See individual role `defaults/main.yml` files for available variables.
+```bash
+ansible-playbook playbooks/wsl/setup.yml
+exec zsh
+```
+
+### Servers
+
+```bash
+# Base system (packages, Docker, users)
+ansible-playbook playbooks/servers/base.yml -i inventories/servers.yml
+
+# Modern shell
+ansible-playbook playbooks/servers/shell.yml -i inventories/servers.yml
+```
+
+## Repository Structure
+
+```
+ansible-playbooks/
+├── roles/                 # Shared roles (DRY)
+│   ├── common-shell/      # Modern shell (all platforms)
+│   ├── mac-system/        # macOS preferences & fonts
+│   ├── app-config/        # Application configs (Sublime, iTerm, Vim)
+│   └── server-base/       # Base server setup
+│
+├── playbooks/             # Platform-specific playbooks
+│   ├── mac/
+│   │   ├── personal.yml   # Personal Mac
+│   │   ├── work.yml       # Work Mac
+│   │   └── vars/          # Variable files
+│   ├── wsl/
+│   │   └── setup.yml      # WSL setup
+│   └── servers/
+│       ├── base.yml       # Base server config
+│       ├── shell.yml      # Shell setup
+│       └── vars/          # Server variables
+│
+├── tasks/                 # Shared task files
+│   ├── mac/               # Mac-specific tasks
+│   └── common/            # Common tasks
+│
+├── inventories/           # Inventory examples
+│   ├── localhost          # Local machine
+│   └── servers-example.yml # Server inventory template
+│
+├── docs/                  # Documentation
+│   ├── MIGRATION.md       # Migration guide from old structure
+│   ├── PLAYBOOKS.md       # Playbook usage reference
+│   ├── ROLES.md           # Role documentation
+│   └── INTEGRATION.md     # Integration with existing playbooks
+│
+├── requirements.yml       # Galaxy dependencies
+├── ansible.cfg            # Ansible configuration
+└── README.md              # This file
+```
+
+## What's New
+
+**Consolidated from**:
+- `ansible-roles/` → Renamed to `ansible-playbooks/`
+- `mac-dev-playbook/` → Content extracted into roles and playbooks
+- Infra integration via shared roles
+
+**New Roles**:
+- `mac-system` - macOS system preferences and fonts
+- `app-config` - Application configurations
+- `server-base` - Base server setup
+
+**New Playbooks**:
+- `playbooks/mac/personal.yml` - Replaces `mac-dev-playbook/main.yml`
+- `playbooks/mac/work.yml` - Work laptop with pro profile
+- `playbooks/servers/base.yml` - Server base configuration
+
+## Features
+
+### Modern Shell
+
+- **Zinit** plugin manager (3-4x faster than OMZ framework)
+- **Starship** prompt with machine-type differentiation
+- **Modern tools**: fzf, zoxide, ripgrep, bat, eza, fd
+- **Auto-detection** of machine type by hostname
+- **Profiles**: personal, pro, server, wsl
+
+### Machine Type Indicators
+
+| Type | Character | Color | Use Case |
+|------|-----------|-------|----------|
+| Laptop (personal) | λ | Blue | Personal development |
+| Laptop (work) | λ | Cyan | Work development |
+| Production | ! | Red | Critical servers |
+| Dev Server | · | Orange | Development servers |
+| Gaming | · | Purple | Gaming servers |
+| Homelab | · | Cyan | Home lab servers |
+
+### DRY Architecture
+
+One definition, multiple uses:
+- `common-shell` role used by Mac, WSL, and server playbooks
+- `server-base` role used by infra and standalone playbooks
+- No duplication of shell setup or system configuration
+
+## Documentation
+
+- **[MIGRATION.md](docs/MIGRATION.md)** - Migrate from old structure
+- **[PLAYBOOKS.md](docs/PLAYBOOKS.md)** - Playbook usage guide
+- **[ROLES.md](docs/ROLES.md)** - Role documentation
+- **[INTEGRATION.md](docs/INTEGRATION.md)** - Integration guide
 
 ## Requirements
 
@@ -65,30 +142,100 @@ See individual role `defaults/main.yml` files for available variables.
 - Git
 - Supported platforms: macOS, Debian/Ubuntu, RHEL/CentOS
 
-## Directory Structure
+## Installation
 
+```bash
+# Clone if needed
+cd ~/Development/terminal_improvements
+git clone <repo-url> ansible-playbooks
+cd ansible-playbooks
+
+# Install dependencies
+ansible-galaxy install -r requirements.yml
+
+# Run playbook for your platform
+ansible-playbook playbooks/<platform>/<playbook>.yml
 ```
-ansible-roles/
-├── README.md
-├── requirements.yml          # External role dependencies
-└── roles/
-    ├── common-shell/
-    │   ├── defaults/
-    │   │   └── main.yml
-    │   ├── tasks/
-    │   │   ├── main.yml
-    │   │   ├── detect-platform.yml
-    │   │   ├── install-starship.yml
-    │   │   ├── install-modern-tools.yml
-    │   │   ├── setup-zinit.yml
-    │   │   └── configure-shell.yml
-    │   ├── templates/
-    │   │   └── machine-detect.zsh.j2
-    │   └── files/
-    ├── dotfiles-manager/
-    └── machine-profile/
+
+## Common Tasks
+
+### Update Dependencies
+
+```bash
+ansible-galaxy install -r requirements.yml --force
 ```
+
+### Dry Run (Check Mode)
+
+```bash
+ansible-playbook playbooks/mac/personal.yml -i inventories/localhost -K --check
+```
+
+### Run Specific Tags
+
+```bash
+# Only shell configuration
+ansible-playbook playbooks/mac/personal.yml -i inventories/localhost -K --tags shell
+
+# Only macOS system settings
+ansible-playbook playbooks/mac/personal.yml -i inventories/localhost -K --tags osx,system
+```
+
+### Verbose Output
+
+```bash
+ansible-playbook playbooks/mac/personal.yml -i inventories/localhost -K -vv
+```
+
+## Customization
+
+### Variables
+
+Edit variable files to customize installations:
+- `playbooks/mac/vars/personal.yml` - Personal Mac settings
+- `playbooks/mac/vars/work.yml` - Work Mac settings
+- `playbooks/servers/vars/defaults.yml` - Server defaults
+
+### Inventory
+
+Copy and customize inventory files:
+```bash
+cp inventories/servers-example.yml inventories/servers.yml
+vim inventories/servers.yml  # Add your servers
+```
+
+## Integration
+
+This repository integrates with:
+- **mac-playbook-work** - Work-specific configs (private repo)
+- **infra/ansible** - Server infrastructure automation
+- **dotfiles** - Shell configuration files
+
+See [INTEGRATION.md](docs/INTEGRATION.md) for details.
+
+## Contributing
+
+When adding new roles or playbooks:
+1. Follow existing structure and conventions
+2. Add comprehensive documentation
+3. Use tags for selective execution
+4. Ensure idempotency (safe to run multiple times)
+5. Test on clean system before committing
+
+## Rollout Strategy
+
+Recommended order for deploying the consolidated setup:
+1. **WSL** - Low risk, clean environment
+2. **Old MacBook** - Test macOS deployment
+3. **Test Server** - Validate minimal config
+4. **Other Servers** - Gradual rollout
+5. **Work Laptop** - Last, highest risk (backup first!)
 
 ## License
 
 MIT
+
+---
+
+**Last Updated**: 2025-11-13
+**Status**: Phase 1-4 Complete, Ready for Testing

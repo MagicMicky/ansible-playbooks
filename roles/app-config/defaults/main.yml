@@ -1,0 +1,13 @@
+---
+# Default variables for app-config role
+
+# Sublime Text configuration
+configure_sublime: true
+dotfiles_repo_local_destination: "~/Development/terminal_improvements/dotfiles"
+
+# iTerm2 configuration
+configure_iterm: true
+
+# Vim configuration
+configure_vim: true
+vim_script: "~/.to_be_installed/vim/install.sh"
