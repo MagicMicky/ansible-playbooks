@@ -1,0 +1,49 @@
+---
+# Test inventory for server environments with multiple machine types
+# Used for testing machine type detection and Starship prompt differentiation
+
+all:
+  children:
+    production_servers:
+      hosts:
+        prod-web-01:
+          ansible_connection: local
+          ansible_python_interpreter: /usr/bin/python3
+          expected_prompt_char: "!"
+          expected_prompt_color: red
+
+    dev_servers:
+      hosts:
+        dev-test-01:
+          ansible_connection: local
+          ansible_python_interpreter: /usr/bin/python3
+          expected_prompt_char: "·"
+          expected_prompt_color: orange
+
+    gaming_servers:
+      hosts:
+        gaming-srv-01:
+          ansible_connection: local
+          ansible_python_interpreter: /usr/bin/python3
+          expected_prompt_char: "·"
+          expected_prompt_color: purple
+
+    homelab_servers:
+      hosts:
+        homelab-nas-01:
+          ansible_connection: local
+          ansible_python_interpreter: /usr/bin/python3
+          expected_prompt_char: "·"
+          expected_prompt_color: coral
+
+  vars:
+    # Skip homebrew on servers
+    configure_homebrew: false
+
+    # Test user settings
+    ansible_user: testuser
+    ansible_become: yes
+    ansible_become_method: sudo
+
+    # Server profile for minimal shell configuration
+    shell_profile: server

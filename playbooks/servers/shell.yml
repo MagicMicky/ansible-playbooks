@@ -9,8 +9,8 @@
   vars:
     machine_profile: server
     dotfiles_repo: "/opt/dotfiles"  # System location for servers
-    dotfiles_repo_url: "git@github.com:MagicMicky/dotfiles.git"
-    dotfiles_branch: main
+    dotfiles_repo_url: "https://github.com/MagicMicky/dotfiles.git"
+    dotfiles_branch: modern-shell-2025
 
     # Minimal tool installation for servers
     install_starship: true
