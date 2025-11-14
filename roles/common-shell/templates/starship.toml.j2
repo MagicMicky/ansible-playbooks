@@ -29,6 +29,11 @@ style = "bold"
 format = "[$path](fg:{{ theme.accent }}) "
 truncation_length = 3
 truncate_to_repo = true
+truncation_symbol = "…/"
+# fish_style_pwd_dir_length of 0 means show full directory names (no shortening)
+# This ensures you see /var/log not /v/log
+fish_style_pwd_dir_length = 0
+read_only = " 🔒"
 
 [git_branch]
 # Use Starship's default symbol (auto-detects Nerd Font support)
