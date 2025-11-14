@@ -1,9 +1,19 @@
 ---
 # Shell configuration tasks
 
+- name: Load Catppuccin theme variables
+  include_vars:
+    file: catppuccin-mocha.yml
+
 - name: Ensure .config/shell directory exists
   file:
     path: "{{ ansible_env.HOME }}/.config/shell"
+    state: directory
+    mode: '0755'
+
+- name: Ensure .config/bat/themes directory exists
+  file:
+    path: "{{ ansible_env.HOME }}/.config/bat/themes"
     state: directory
     mode: '0755'
 
@@ -52,6 +62,24 @@
   template:
     src: starship.toml.j2
     dest: "{{ ansible_env.HOME }}/.config/starship.toml"
+    mode: '0644'
+
+- name: Download Catppuccin Mocha bat theme
+  get_url:
+    url: "https://raw.githubusercontent.com/catppuccin/bat/main/themes/Catppuccin%20Mocha.tmTheme"
+    dest: "{{ ansible_env.HOME }}/.config/bat/themes/Catppuccin Mocha.tmTheme"
+    mode: '0644'
+  register: bat_theme_download
+
+- name: Build bat cache (only if theme was downloaded/updated)
+  command: bat cache --build
+  when: bat_theme_download.changed
+  failed_when: false  # Don't fail if bat is not installed yet
+
+- name: Generate shell theme configuration
+  template:
+    src: shell-theme.zsh.j2
+    dest: "{{ ansible_env.HOME }}/.config/shell/theme.zsh"
     mode: '0644'
 
 - name: Set machine type marker (for documentation/debugging)
