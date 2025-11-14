@@ -18,10 +18,10 @@
 
 {% if machine_profile == 'server' or machine_profile == 'wsl' %}
 format = """
+[\\[{{ theme.char }}\\]](fg:{{ theme.accent }}) \
 $username\
 [@](fg:{{ theme.accent }})\
-$hostname\
-[\\[{{ theme.char }}\\] ](fg:{{ theme.accent }})\
+$hostname \
 $directory\
 $git_branch\
 $git_status\
@@ -29,7 +29,7 @@ $cmd_duration\
 $character"""
 {% else %}
 format = """
-[\\[{{ theme.char }}\\] ](fg:{{ theme.accent }})\
+[\\[{{ theme.char }}\\]](fg:{{ theme.accent }}) \
 $directory\
 $git_branch\
 $git_status\
