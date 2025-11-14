@@ -45,7 +45,7 @@ all:
     ansible_user: testuser
 
     # Server profile for minimal shell configuration
-    shell_profile: server
+    machine_profile: server
 
     # Test environment dotfiles configuration
     # Clone from public GitHub repo (simulates real deployment)

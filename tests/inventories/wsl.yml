@@ -21,7 +21,7 @@ all:
     # WSL_INTEROP: /run/WSL/interop
 
     # Machine profile for shell configuration
-    shell_profile: wsl
+    machine_profile: wsl
 
     # Test environment dotfiles configuration
     # Clone from public GitHub repo (simulates real deployment)
