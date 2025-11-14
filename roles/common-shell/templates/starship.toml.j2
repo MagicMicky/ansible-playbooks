@@ -27,8 +27,8 @@ $character"""
 [directory]
 style = "bold"
 format = "[$path](fg:{{ theme.accent }}) "
-truncation_length = 10  # Show up to 10 parent directories before truncating
-truncate_to_repo = true  # In git repos, start from repo root
+truncation_length = 5  # Show up to 5 parent directories before truncating
+truncate_to_repo = false  # Show full path even in git repos (not just from repo root)
 truncation_symbol = "…/"
 # fish_style_pwd_dir_length of 0 means show full directory names (no shortening)
 # This ensures you see /var/log not /v/log
