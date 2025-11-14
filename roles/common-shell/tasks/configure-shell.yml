@@ -84,6 +84,18 @@
     - dotfiles_repo_url != ""
     - not dotfiles_dir.stat.exists
 
+- name: Update dotfiles to correct branch (if repo already exists)
+  git:
+    repo: "{{ dotfiles_repo_url }}"
+    dest: "{{ dotfiles_repo }}"
+    version: "{{ dotfiles_branch }}"
+    update: yes
+    force: yes
+  when:
+    - dotfiles_repo_url is defined
+    - dotfiles_repo_url != ""
+    - dotfiles_dir.stat.exists
+
 - name: Check if existing .zshrc exists
   stat:
     path: "{{ ansible_env.HOME }}/.zshrc"
