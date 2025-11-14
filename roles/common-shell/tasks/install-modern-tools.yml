@@ -31,6 +31,12 @@
   become: yes
   when: is_debian
 
+- name: Ensure .local/bin directory exists
+  file:
+    path: "{{ ansible_env.HOME }}/.local/bin"
+    state: directory
+    mode: '0755'
+
 - name: Check if fzf is installed
   stat:
     path: "{{ ansible_env.HOME }}/.fzf/bin/fzf"
@@ -40,6 +46,8 @@
   shell: |
     git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
     cd ~/.fzf && ./install --bin
+    # Symlink to .local/bin for easier PATH management
+    ln -sf ~/.fzf/bin/fzf ~/.local/bin/fzf
   when:
     - not is_macos
     - not fzf_binary.stat.exists
@@ -66,12 +74,6 @@
     - not is_macos
     - not zoxide_binary.stat.exists
   changed_when: true
-
-- name: Ensure .local/bin directory exists
-  file:
-    path: "{{ ansible_env.HOME }}/.local/bin"
-    state: directory
-    mode: '0755'
 
 # Note: bat and eza installation on Linux may require additional steps
 # They can be installed via cargo, snap, or downloaded from GitHub releases
