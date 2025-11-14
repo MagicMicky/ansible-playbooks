@@ -16,6 +16,18 @@
 # Accent color: {{ theme.accent }}
 # Character: {{ theme.char }}
 
+{% if machine_profile == 'server' or machine_profile == 'wsl' %}
+format = """
+$username\
+[@](fg:{{ theme.accent }})\
+$hostname\
+[\\[{{ theme.char }}\\] ](fg:{{ theme.accent }})\
+$directory\
+$git_branch\
+$git_status\
+$cmd_duration\
+$character"""
+{% else %}
 format = """
 [\\[{{ theme.char }}\\] ](fg:{{ theme.accent }})\
 $directory\
@@ -23,6 +35,7 @@ $git_branch\
 $git_status\
 $cmd_duration\
 $character"""
+{% endif %}
 
 [directory]
 style = "bold"
@@ -65,3 +78,15 @@ show_milliseconds = false
 [character]
 success_symbol = "[❯](fg:{{ catppuccin_green }})"
 error_symbol = "[❯](fg:{{ catppuccin_red }})"
+
+[username]
+style_user = "bold fg:{{ theme.accent }}"
+style_root = "bold fg:{{ catppuccin_red }}"
+format = "[$user]($style)"
+disabled = false
+show_always = true
+
+[hostname]
+ssh_only = false
+format = "[$hostname](bold fg:{{ theme.accent }})"
+disabled = false

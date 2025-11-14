@@ -52,12 +52,6 @@
       Starship Character: {{ starship_char }}
       Starship Color: {{ starship_color }}
 
-- name: Generate Starship environment configuration
-  template:
-    src: starship-env.zsh.j2
-    dest: "{{ ansible_env.HOME }}/.config/shell/starship-env.zsh"
-    mode: '0644'
-
 - name: Generate Starship configuration with machine-specific colors
   template:
     src: starship.toml.j2
