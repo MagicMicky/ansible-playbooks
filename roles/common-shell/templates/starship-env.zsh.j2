@@ -1,0 +1,70 @@
+#!/usr/bin/env zsh
+# Starship environment variables (pre-computed at install time by Ansible)
+# This file is generated from ansible-playbooks/roles/common-shell/templates/starship-env.zsh.j2
+# DO NOT EDIT MANUALLY - changes will be overwritten on next Ansible run
+
+# Machine type
+export MACHINE_TYPE="{{ machine_profile }}"
+
+# Starship prompt customization
+{% if machine_profile == 'personal' %}
+# Personal laptop configuration
+export STARSHIP_ENV_CHAR="λ"
+export STARSHIP_ENV_COLOR="#82AAFF"
+export STARSHIP_SHOW_HOSTNAME="false"
+export STARSHIP_SHOW_LANGS="true"
+{% elif machine_profile == 'pro' %}
+# Work laptop configuration
+export STARSHIP_ENV_CHAR="λ"
+export STARSHIP_ENV_COLOR="#7FDBCA"
+export STARSHIP_SHOW_HOSTNAME="false"
+export STARSHIP_SHOW_LANGS="true"
+{% elif machine_profile == 'wsl' %}
+# WSL configuration
+export STARSHIP_ENV_CHAR="λ"
+export STARSHIP_ENV_COLOR="#82AAFF"
+export STARSHIP_SHOW_HOSTNAME="true"
+export STARSHIP_SHOW_LANGS="true"
+{% elif machine_profile == 'server' %}
+# Server configuration (type: {{ server_type | default('generic') }})
+{% if server_type == 'prod' or server_type == 'production' %}
+export STARSHIP_ENV_CHAR="!"
+export STARSHIP_ENV_COLOR="#FF5370"
+export STARSHIP_SHOW_HOSTNAME="true"
+export STARSHIP_SHOW_LANGS="false"
+{% elif server_type == 'dev-server' %}
+export STARSHIP_ENV_CHAR="·"
+export STARSHIP_ENV_COLOR="#FFB86C"
+export STARSHIP_SHOW_HOSTNAME="true"
+export STARSHIP_SHOW_LANGS="true"
+{% elif server_type == 'gaming-server' %}
+export STARSHIP_ENV_CHAR="·"
+export STARSHIP_ENV_COLOR="#C792EA"
+export STARSHIP_SHOW_HOSTNAME="true"
+export STARSHIP_SHOW_LANGS="false"
+{% elif server_type == 'dedicated-server' %}
+export STARSHIP_ENV_CHAR="·"
+export STARSHIP_ENV_COLOR="#F78C6C"
+export STARSHIP_SHOW_HOSTNAME="true"
+export STARSHIP_SHOW_LANGS="true"
+{% elif server_type == 'homelab' %}
+export STARSHIP_ENV_CHAR="·"
+export STARSHIP_ENV_COLOR="#89DDFF"
+export STARSHIP_SHOW_HOSTNAME="true"
+export STARSHIP_SHOW_LANGS="true"
+{% else %}
+# Generic server (default)
+export STARSHIP_ENV_CHAR="·"
+export STARSHIP_ENV_COLOR="#89DDFF"
+export STARSHIP_SHOW_HOSTNAME="true"
+export STARSHIP_SHOW_LANGS="true"
+{% endif %}
+{% endif %}
+
+# Root user detection (must be done at runtime)
+if [[ $UID -eq 0 ]] || [[ $(whoami) = "root" ]]; then
+  export STARSHIP_IS_ROOT="true"
+  export STARSHIP_SHOW_HOSTNAME="true"  # Always show hostname for root
+else
+  export STARSHIP_IS_ROOT="false"
+fi

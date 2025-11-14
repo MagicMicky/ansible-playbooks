@@ -1,8 +1,13 @@
 ---
 # common-shell role default variables
 
-# Machine profile: personal, work, server, wsl
+# Machine profile: personal, pro, server, wsl
 machine_profile: personal
+
+# Server type (only used when machine_profile is 'server')
+# Options: prod, production, dev-server, gaming-server, dedicated-server, homelab
+# Defaults to 'generic' if not specified
+server_type: generic
 
 # Dotfiles configuration
 dotfiles_repo: "{{ ansible_env.HOME }}/Development/dotfiles"

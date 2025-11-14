@@ -7,14 +7,20 @@
     state: directory
     mode: '0755'
 
-- name: Set machine type marker
+- name: Generate Starship environment configuration
+  template:
+    src: starship-env.zsh.j2
+    dest: "{{ ansible_env.HOME }}/.config/shell/starship-env.zsh"
+    mode: '0644'
+
+- name: Set machine type marker (for documentation/debugging)
   copy:
     content: "{{ machine_profile }}"
     dest: "{{ machine_type_file }}"
     mode: '0644'
   when: machine_profile is defined
 
-- name: Set pro profile marker (work laptop)
+- name: Set pro profile marker (work laptop - for documentation/debugging)
   copy:
     content: ""
     dest: "{{ enable_pro_file }}"
