@@ -31,17 +31,10 @@
 
 - name: Set Starship character and color based on machine type
   set_fact:
-    starship_char: "{{ '!' if (machine_profile == 'server' and server_type in ['prod', 'production']) else
-                       ('●' if machine_profile == 'server' else
-                       'λ') }}"
-    starship_color: "{{ '#FF5370' if (machine_profile == 'server' and server_type in ['prod', 'production']) else
-                        ('#FFB86C' if (machine_profile == 'server' and server_type == 'dev-server') else
-                        ('#C792EA' if (machine_profile == 'server' and server_type == 'gaming-server') else
-                        ('#F78C6C' if (machine_profile == 'server' and server_type == 'dedicated-server') else
-                        ('#89DDFF' if (machine_profile == 'server' and server_type == 'homelab') else
-                        ('#89DDFF' if machine_profile == 'server' else
-                        ('#7FDBCA' if machine_profile == 'pro' else
-                        '#82AAFF')))))) }}"
+    starship_char: "{{ '●' if machine_profile in ['server', 'homelab'] else 'λ' }}"
+    starship_color: "{{ catppuccin_green if machine_profile == 'homelab' else
+                        (catppuccin_mauve if machine_profile == 'server' else
+                        catppuccin_sapphire) }}"
 
 - name: Show machine configuration
   debug:
@@ -64,10 +57,11 @@
     dest: "{{ ansible_env.HOME }}/.config/bat/themes/Catppuccin Mocha.tmTheme"
     mode: '0644'
   register: bat_theme_download
+  failed_when: false  # Don't fail if directory doesn't exist (bat not installed yet)
 
 - name: Build bat cache (only if theme was downloaded/updated)
   command: bat cache --build
-  when: bat_theme_download.changed
+  when: bat_theme_download.changed and not bat_theme_download.failed
   failed_when: false  # Don't fail if bat is not installed yet
 
 - name: Generate shell theme configuration
