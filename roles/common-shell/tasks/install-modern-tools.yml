@@ -25,11 +25,25 @@
 - name: Install available modern tools (Debian/Ubuntu)
   apt:
     name:
-      - fzf
       - ripgrep
+      - git  # Required for fzf installation
     state: present
   become: yes
   when: is_debian
+
+- name: Check if fzf is installed
+  stat:
+    path: "{{ ansible_env.HOME }}/.fzf"
+  register: fzf_dir
+
+- name: Install fzf with shell integration (Linux)
+  shell: |
+    git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
+    ~/.fzf/install --key-bindings --completion --no-update-rc --no-bash --no-fish
+  when:
+    - not is_macos
+    - not fzf_dir.stat.exists
+  changed_when: true
 
 - name: Check if zoxide is installed
   stat:
