@@ -33,17 +33,27 @@
 
 - name: Check if fzf is installed
   stat:
-    path: "{{ ansible_env.HOME }}/.fzf"
-  register: fzf_dir
+    path: "{{ ansible_env.HOME }}/.fzf/bin/fzf"
+  register: fzf_binary
 
 - name: Install fzf with shell integration (Linux)
   shell: |
     git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
-    ~/.fzf/install --key-bindings --completion --no-update-rc --no-bash --no-fish
+    cd ~/.fzf && ./install --bin
   when:
     - not is_macos
-    - not fzf_dir.stat.exists
+    - not fzf_binary.stat.exists
   changed_when: true
+
+- name: Add fzf to PATH in profile config
+  blockinfile:
+    path: "{{ ansible_env.HOME }}/.zshenv"
+    create: yes
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - FZF"
+    block: |
+      # Add fzf to PATH
+      export PATH="$HOME/.fzf/bin:$PATH"
+  when: not is_macos
 
 - name: Check if zoxide is installed
   stat:
