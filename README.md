@@ -74,10 +74,8 @@ ansible-playbooks/
 │   └── servers-example.yml # Server inventory template
 │
 ├── docs/                  # Documentation
-│   ├── MIGRATION.md       # Migration guide from old structure
 │   ├── PLAYBOOKS.md       # Playbook usage reference
-│   ├── ROLES.md           # Role documentation
-│   └── INTEGRATION.md     # Integration with existing playbooks
+│   └── ROLES.md           # Role documentation
 │
 ├── tests/                 # Testing infrastructure
 │   ├── docker/            # Docker test containers
@@ -184,13 +182,10 @@ One definition, multiple uses:
 ### Playbook & Role Documentation
 - **[PLAYBOOKS.md](docs/PLAYBOOKS.md)** - Playbook usage guide
 - **[ROLES.md](docs/ROLES.md)** - Role documentation
-- **[INTEGRATION.md](docs/INTEGRATION.md)** - Integration guide
-- **[MIGRATION.md](docs/MIGRATION.md)** - Migrate from old structure
 
 ### Testing & Deployment
 - **[tests/README.md](tests/README.md)** - Complete testing guide
 - **[tests/mac-validation-checklist.md](tests/mac-validation-checklist.md)** - Mac testing procedures
-- **[STATUS.md](STATUS.md)** - Project status and completion metrics
 
 ## Requirements
 
@@ -278,14 +273,13 @@ When adding new roles or playbooks:
 4. Ensure idempotency (safe to run multiple times)
 5. Test on clean system before committing
 
-## Rollout Strategy
+## Deployment
 
-Recommended order for deploying the consolidated setup:
+Recommended order for deploying to your machines:
 1. **WSL** - Low risk, clean environment
 2. **Old MacBook** - Test macOS deployment
-3. **Test Server** - Validate minimal config
-4. **Other Servers** - Gradual rollout
-5. **Work Laptop** - Last, highest risk (backup first!)
+3. **Servers** - Gradual rollout
+4. **Work Laptop** - Last, highest risk (backup first!)
 
 ## License
 
@@ -293,6 +287,4 @@ MIT
 
 ---
 
-**Last Updated**: 2025-01-13
-**Status**: Phases 0-9 Complete (95%), Testing Infrastructure Ready
-**Next**: Production Rollout (Phase 10) - See [STATUS.md](STATUS.md)
+**Last Updated**: 2025-01-14
