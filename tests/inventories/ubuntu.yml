@@ -20,4 +20,4 @@ all:
     # Clone from public GitHub repo (simulates real deployment)
     dotfiles_repo: "{{ ansible_env.HOME }}/dotfiles-test"
     dotfiles_repo_url: "https://github.com/MagicMicky/dotfiles.git"
-    dotfiles_branch: modern-shell-2025
+    dotfiles_branch: vanilla-baseline  # Testing vanilla baseline (was: modern-shell-2025)
