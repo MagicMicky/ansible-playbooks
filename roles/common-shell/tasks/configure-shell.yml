@@ -25,17 +25,10 @@
 
 - name: Set Starship character and color based on machine type
   set_fact:
-    starship_char: "{{ '!' if (machine_profile == 'server' and server_type in ['prod', 'production']) else
-                       ('●' if machine_profile == 'server' else
-                       'λ') }}"
-    starship_color: "{{ catppuccin_red if (machine_profile == 'server' and server_type in ['prod', 'production']) else
-                        (catppuccin_peach if (machine_profile == 'server' and server_type == 'dev-server') else
-                        (catppuccin_mauve if (machine_profile == 'server' and server_type == 'gaming-server') else
-                        (catppuccin_flamingo if (machine_profile == 'server' and server_type == 'dedicated-server') else
-                        (catppuccin_teal if (machine_profile == 'server' and server_type == 'homelab') else
-                        (catppuccin_sky if machine_profile == 'server' else
-                        (catppuccin_teal if machine_profile == 'pro' else
-                        catppuccin_sapphire)))))) }}"
+    starship_char: "{{ '●' if machine_profile in ['server', 'homelab'] else 'λ' }}"
+    starship_color: "{{ catppuccin_green if machine_profile == 'homelab' else
+                        (catppuccin_mauve if machine_profile == 'server' else
+                        catppuccin_sapphire) }}"
 
 - name: Show machine configuration
   debug:
