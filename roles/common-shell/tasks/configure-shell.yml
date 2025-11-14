@@ -120,6 +120,36 @@
     state: directory
     mode: '0755'
 
+- name: Symlink core zsh config files to .zsh.d
+  file:
+    src: "{{ dotfiles_repo }}/zsh/core/{{ item }}"
+    dest: "{{ ansible_env.HOME }}/.zsh.d/{{ item }}"
+    state: link
+    force: yes
+  loop:
+    - 01-zinit.zsh
+    - 10-path.zsh
+    - 20-env.zsh
+    - 30-aliases.zsh
+    - 40-functions.zsh
+
+- name: Symlink profile zsh config files to .zsh.d
+  file:
+    src: "{{ dotfiles_repo }}/zsh/profiles/{{ machine_profile }}/{{ item }}"
+    dest: "{{ ansible_env.HOME }}/.zsh.d/{{ item }}"
+    state: link
+    force: yes
+  loop:
+    - plugins.zsh
+    - config.zsh
+    - overrides.zsh
+
+- name: Create machine type marker file
+  copy:
+    content: "{{ machine_profile }}"
+    dest: "{{ ansible_env.HOME }}/.zsh.d/.machine-type"
+    mode: '0644'
+
 - name: Include set-zsh-shell tasks
   include_tasks: set-zsh-shell.yml
   when: set_default_shell | default(true)
