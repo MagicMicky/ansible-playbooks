@@ -12,7 +12,7 @@ machine_profile: personal
 # Dotfiles configuration
 dotfiles_repo: "{{ ansible_env.HOME }}/Development/dotfiles"
 dotfiles_repo_url: ""  # Set in playbook
-dotfiles_branch: main
+dotfiles_branch: vanilla-baseline  # Changed for vanilla testing - was: main
 
 # Modern tools to install
 install_starship: true
