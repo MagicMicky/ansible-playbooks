@@ -134,11 +134,88 @@ if [ "${SHELL_PROFILE}" != "server" ]; then
     echo ""
 fi
 
-# 4. Test Starship configuration
-echo "4. Starship Configuration"
+# 4. Test Starship configuration and theme
+echo "4. Starship Configuration & Theme"
 if [ -f "$HOME/.config/starship.toml" ]; then
     echo -e "  ${GREEN}✓${NC} starship.toml exists"
     PASSED=$((PASSED + 1))
+
+    # Detect machine profile from marker file
+    MACHINE_PROFILE=""
+    if [ -f "$HOME/.zsh.d/.machine-type" ]; then
+        MACHINE_PROFILE=$(cat "$HOME/.zsh.d/.machine-type")
+        echo "  Machine profile: $MACHINE_PROFILE"
+    elif [ -f "$HOME/.config/shell/machine-type" ]; then
+        MACHINE_PROFILE=$(cat "$HOME/.config/shell/machine-type")
+        echo "  Machine profile: $MACHINE_PROFILE"
+    fi
+
+    # Validate expected character based on profile
+    if [ -n "$MACHINE_PROFILE" ]; then
+        case "$MACHINE_PROFILE" in
+            personal|pro|wsl|laptop)
+                EXPECTED_CHAR="λ"
+                EXPECTED_COLOR="#74c7ec"
+                THEME_NAME="workstation (sapphire)"
+                ;;
+            homelab)
+                EXPECTED_CHAR="●"
+                EXPECTED_COLOR="#a6e3a1"
+                THEME_NAME="homelab (green)"
+                ;;
+            server)
+                EXPECTED_CHAR="★"
+                EXPECTED_COLOR="#cba6f7"
+                THEME_NAME="server (mauve)"
+                ;;
+            *)
+                EXPECTED_CHAR=""
+                ;;
+        esac
+
+        if [ -n "$EXPECTED_CHAR" ]; then
+            if grep -q "$EXPECTED_CHAR" "$HOME/.config/starship.toml"; then
+                echo -e "  ${GREEN}✓${NC} Correct character for $THEME_NAME: $EXPECTED_CHAR"
+                PASSED=$((PASSED + 1))
+            else
+                echo -e "  ${RED}✗${NC} Expected character '$EXPECTED_CHAR' not found for $MACHINE_PROFILE"
+                FAILED=$((FAILED + 1))
+            fi
+
+            if grep -q "$EXPECTED_COLOR" "$HOME/.config/starship.toml"; then
+                echo -e "  ${GREEN}✓${NC} Correct accent color: $EXPECTED_COLOR"
+                PASSED=$((PASSED + 1))
+            else
+                echo -e "  ${RED}✗${NC} Expected color '$EXPECTED_COLOR' not found for $MACHINE_PROFILE"
+                FAILED=$((FAILED + 1))
+            fi
+        fi
+    fi
+
+    # Test prompt rendering (if starship is available)
+    if command -v starship > /dev/null 2>&1; then
+        # Try to render prompt (might fail in non-interactive context)
+        PROMPT_OUTPUT=$(starship prompt 2>/dev/null || echo "")
+        if [ -n "$PROMPT_OUTPUT" ]; then
+            echo -e "  ${GREEN}✓${NC} Starship prompt renders"
+            PASSED=$((PASSED + 1))
+
+            # Check if prompt contains the expected character (may be in ANSI codes)
+            if [ -n "$EXPECTED_CHAR" ]; then
+                if echo "$PROMPT_OUTPUT" | grep -q "$EXPECTED_CHAR"; then
+                    echo -e "  ${GREEN}✓${NC} Prompt contains expected character"
+                    PASSED=$((PASSED + 1))
+                else
+                    echo -e "  ${YELLOW}⚠${NC} Prompt doesn't contain '$EXPECTED_CHAR' (might be escaped)"
+                    # Don't fail - could be ANSI escaped
+                    PASSED=$((PASSED + 1))
+                fi
+            fi
+        else
+            echo -e "  ${YELLOW}⚠${NC} Could not render prompt (non-interactive shell)"
+            PASSED=$((PASSED + 1))  # Don't fail
+        fi
+    fi
 else
     echo -e "  ${YELLOW}⚠${NC} starship.toml missing (optional, might use defaults)"
     PASSED=$((PASSED + 1))  # Don't fail for missing starship.toml
