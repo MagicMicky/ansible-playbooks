@@ -32,7 +32,7 @@
 - name: Set Starship character and color based on machine type
   set_fact:
     starship_char: "{{ '!' if (machine_profile == 'server' and server_type in ['prod', 'production']) else
-                       ('·' if machine_profile == 'server' else
+                       ('●' if machine_profile == 'server' else
                        'λ') }}"
     starship_color: "{{ '#FF5370' if (machine_profile == 'server' and server_type in ['prod', 'production']) else
                         ('#FFB86C' if (machine_profile == 'server' and server_type == 'dev-server') else
