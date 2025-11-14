@@ -1,39 +1,28 @@
 ---
-# Font installation tasks
-# Extracted from mac-dev-playbook/tasks/iterm.yml
+# Font installation tasks for macOS
+# Installs Powerline-patched fonts for terminal use
 
-- name: Clone Menlo for powerline font
-  git:
-    repo: "{{ powerline_font_repo }}"
-    dest: "{{ fonts_temp_dir }}"
-    accept_hostkey: yes
-    force: yes
-  check_mode: no  # Run in check mode (cloning repo)
-  become: no
-  tags: ['powerline-fonts']
-
-- name: Ensure Fonts directory exists
+- name: Ensure fonts directory exists
   file:
-    path: "{{ fonts_dir }}"
+    path: "{{ fonts_dir | default('~/Library/Fonts') }}"
     state: directory
-  become: no
-  tags: ['powerline-fonts']
+    mode: '0755'
 
-- name: Copy Menlo for Powerline fonts
-  copy:
-    src: "{{ fonts_temp_dir }}/{{ item }}"
-    dest: "{{ fonts_dir }}/"
-  become: no
-  with_items:
-    - "Menlo for Powerline.ttf"
-    - "Menlo Italic for Powerline.ttf"
-    - "Menlo Bold for Powerline.ttf"
-    - "Menlo Bold Italic for Powerline.ttf"
-  tags: ['powerline-fonts']
+- name: Clone Powerline fonts repository
+  git:
+    repo: "{{ powerline_font_repo | default('https://github.com/powerline/fonts.git') }}"
+    dest: /tmp/powerline-fonts
+    depth: 1
+    update: yes
 
-- name: Clean up temporary font directory
+- name: Install Powerline fonts
+  command: /tmp/powerline-fonts/install.sh
+  args:
+    creates: "{{ fonts_dir | default('~/Library/Fonts') }}/Meslo LG M Regular for Powerline.otf"
+  register: fonts_installed
+
+- name: Clean up Powerline fonts repository
   file:
-    path: "{{ fonts_temp_dir }}"
+    path: /tmp/powerline-fonts
     state: absent
-  become: no
-  tags: ['powerline-fonts']
+  when: fonts_installed.changed

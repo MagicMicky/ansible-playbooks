@@ -1,9 +1,19 @@
 ---
 # Shell configuration tasks
 
+- name: Load Catppuccin theme variables
+  include_vars:
+    file: catppuccin-mocha.yml
+
 - name: Ensure .config/shell directory exists
   file:
     path: "{{ ansible_env.HOME }}/.config/shell"
+    state: directory
+    mode: '0755'
+
+- name: Ensure .config/bat/themes directory exists
+  file:
+    path: "{{ ansible_env.HOME }}/.config/bat/themes"
     state: directory
     mode: '0755'
 
@@ -22,7 +32,7 @@
 - name: Set Starship character and color based on machine type
   set_fact:
     starship_char: "{{ '!' if (machine_profile == 'server' and server_type in ['prod', 'production']) else
-                       ('·' if machine_profile == 'server' else
+                       ('●' if machine_profile == 'server' else
                        'λ') }}"
     starship_color: "{{ '#FF5370' if (machine_profile == 'server' and server_type in ['prod', 'production']) else
                         ('#FFB86C' if (machine_profile == 'server' and server_type == 'dev-server') else
@@ -42,16 +52,28 @@
       Starship Character: {{ starship_char }}
       Starship Color: {{ starship_color }}
 
-- name: Generate Starship environment configuration
-  template:
-    src: starship-env.zsh.j2
-    dest: "{{ ansible_env.HOME }}/.config/shell/starship-env.zsh"
-    mode: '0644'
-
 - name: Generate Starship configuration with machine-specific colors
   template:
     src: starship.toml.j2
     dest: "{{ ansible_env.HOME }}/.config/starship.toml"
+    mode: '0644'
+
+- name: Download Catppuccin Mocha bat theme
+  get_url:
+    url: "https://raw.githubusercontent.com/catppuccin/bat/main/themes/Catppuccin%20Mocha.tmTheme"
+    dest: "{{ ansible_env.HOME }}/.config/bat/themes/Catppuccin Mocha.tmTheme"
+    mode: '0644'
+  register: bat_theme_download
+
+- name: Build bat cache (only if theme was downloaded/updated)
+  command: bat cache --build
+  when: bat_theme_download.changed
+  failed_when: false  # Don't fail if bat is not installed yet
+
+- name: Generate shell theme configuration
+  template:
+    src: shell-theme.zsh.j2
+    dest: "{{ ansible_env.HOME }}/.config/shell/theme.zsh"
     mode: '0644'
 
 - name: Set machine type marker (for documentation/debugging)
@@ -89,13 +111,14 @@
     path: "{{ ansible_env.HOME }}/.zshrc"
   register: existing_zshrc
 
-- name: Backup existing .zshrc if it exists
+- name: Backup existing .zshrc if it exists and is not already a symlink
   copy:
     src: "{{ ansible_env.HOME }}/.zshrc"
     dest: "{{ ansible_env.HOME }}/.zshrc.backup-{{ ansible_date_time.epoch }}"
     remote_src: yes
   when:
     - existing_zshrc.stat.exists
+    - not existing_zshrc.stat.islnk  # Only backup if it's NOT already a symlink
   register: backup_result
   failed_when: false  # Best effort - don't fail if backup can't be created
 
@@ -130,6 +153,7 @@
     - 01-zinit.zsh
     - 10-path.zsh
     - 20-env.zsh
+    - 25-tools.zsh
     - 30-aliases.zsh
     - 40-functions.zsh
 
