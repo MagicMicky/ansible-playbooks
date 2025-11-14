@@ -1,0 +1,28 @@
+---
+# Font installation tasks for macOS
+# Installs Powerline-patched fonts for terminal use
+
+- name: Ensure fonts directory exists
+  file:
+    path: "{{ fonts_dir | default('~/Library/Fonts') }}"
+    state: directory
+    mode: '0755'
+
+- name: Clone Powerline fonts repository
+  git:
+    repo: "{{ powerline_font_repo | default('https://github.com/powerline/fonts.git') }}"
+    dest: /tmp/powerline-fonts
+    depth: 1
+    update: yes
+
+- name: Install Powerline fonts
+  command: /tmp/powerline-fonts/install.sh
+  args:
+    creates: "{{ fonts_dir | default('~/Library/Fonts') }}/Meslo LG M Regular for Powerline.otf"
+  register: fonts_installed
+
+- name: Clean up Powerline fonts repository
+  file:
+    path: /tmp/powerline-fonts
+    state: absent
+  when: fonts_installed.changed

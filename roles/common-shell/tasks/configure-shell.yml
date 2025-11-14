@@ -111,13 +111,14 @@
     path: "{{ ansible_env.HOME }}/.zshrc"
   register: existing_zshrc
 
-- name: Backup existing .zshrc if it exists
+- name: Backup existing .zshrc if it exists and is not already a symlink
   copy:
     src: "{{ ansible_env.HOME }}/.zshrc"
     dest: "{{ ansible_env.HOME }}/.zshrc.backup-{{ ansible_date_time.epoch }}"
     remote_src: yes
   when:
     - existing_zshrc.stat.exists
+    - not existing_zshrc.stat.islnk  # Only backup if it's NOT already a symlink
   register: backup_result
   failed_when: false  # Best effort - don't fail if backup can't be created
 
