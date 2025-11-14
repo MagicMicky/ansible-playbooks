@@ -158,6 +158,7 @@
     - 01-zinit.zsh
     - 10-path.zsh
     - 20-env.zsh
+    - 25-tools.zsh
     - 30-aliases.zsh
     - 40-functions.zsh
 
