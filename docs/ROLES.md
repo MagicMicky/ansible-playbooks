@@ -46,6 +46,11 @@ Configures modern shell environment with:
 # Machine profile (required)
 machine_profile: personal  # personal, pro, server, wsl
 
+# Server type (optional, auto-detected from hostname when machine_profile=server)
+# Options: prod, production, dev-server, gaming-server, dedicated-server, homelab, generic
+# Only set manually to override auto-detection
+server_type: generic
+
 # Dotfiles configuration
 dotfiles_repo: ~/Development/terminal_improvements/dotfiles
 dotfiles_repo_url: git@github.com:MagicMicky/dotfiles.git
@@ -79,14 +84,47 @@ skip_heavy_tools: false  # Set true for servers
 **server** (Servers):
 - Minimal plugin set (performance-focused)
 - Only essential tools (starship, fzf, zoxide, ripgrep)
-- Auto-detects server type by hostname
-- Character: ! (prod) or · (other)
+- Auto-detects server type by hostname pattern
+- Character and color vary by server type (see Server Type Detection below)
 - Target startup: <50ms
 
 **wsl** (Windows Subsystem for Linux):
 - Extends laptop profile
 - WSL-specific integrations (Windows path, docker)
 - Blue λ prompt character
+
+### Server Type Detection
+
+When `machine_profile` is set to `server`, the role automatically detects the server type based on the hostname pattern. This determines the Starship prompt character and color.
+
+**Hostname Patterns → Server Types**:
+
+| Hostname Pattern | Server Type | Character | Color | Use Case |
+|-----------------|-------------|-----------|-------|----------|
+| `prod-*`, `production-*` | `prod` | `!` | Red (#FF5370) | Production servers (maximum alert) |
+| `dev-*` | `dev-server` | `·` | Orange (#FFB86C) | Development servers |
+| `gaming-*` | `gaming-server` | `·` | Purple (#C792EA) | Gaming servers |
+| `homelab-*`, `home-*`, `nas-*` | `homelab` | `·` | Cyan (#89DDFF) | Homelab/personal servers |
+| `dedicated-*`, `dedi-*` | `dedicated-server` | `·` | Coral (#F78C6C) | Dedicated servers |
+| (other) | `generic` | `·` | Cyan (#89DDFF) | Generic servers |
+
+**Examples**:
+- `prod-web-01` → Production (red `!`)
+- `dev-test-01` → Development (orange `·`)
+- `gaming-srv-01` → Gaming (purple `·`)
+- `homelab-nas-01` → Homelab (cyan `·`)
+
+**Manual Override**: You can explicitly set `server_type` in your playbook to override auto-detection:
+
+```yaml
+roles:
+  - role: common-shell
+    vars:
+      machine_profile: server
+      server_type: prod  # Force production styling
+```
+
+**Detection Logic**: Located in `roles/common-shell/tasks/configure-shell.yml` lines 10-20. The detection runs before generating the Starship environment configuration.
 
 ### Usage Examples
 

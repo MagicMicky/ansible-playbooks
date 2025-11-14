@@ -4,10 +4,10 @@
 # Machine profile: personal, pro, server, wsl
 machine_profile: personal
 
-# Server type (only used when machine_profile is 'server')
-# Options: prod, production, dev-server, gaming-server, dedicated-server, homelab
-# Defaults to 'generic' if not specified
-server_type: generic
+# Server type (optional, auto-detected from hostname when machine_profile=server)
+# Options: prod, production, dev-server, gaming-server, dedicated-server, homelab, generic
+# Leave undefined to enable auto-detection, or set manually to override
+# server_type: prod
 
 # Dotfiles configuration
 dotfiles_repo: "{{ ansible_env.HOME }}/Development/dotfiles"

@@ -7,6 +7,25 @@
     state: directory
     mode: '0755'
 
+- name: Detect server type from hostname
+  set_fact:
+    server_type: "{{ 'prod' if (inventory_hostname is match('^(prod|production).*')) else
+                     ('dev-server' if (inventory_hostname is match('^dev-.*')) else
+                     ('gaming-server' if (inventory_hostname is match('^gaming.*')) else
+                     ('homelab' if (inventory_hostname is match('^(homelab|home-|nas).*')) else
+                     ('dedicated-server' if (inventory_hostname is match('^(dedicated|dedi-).*')) else
+                     'generic')))) }}"
+  when:
+    - machine_profile == 'server'
+    - server_type is not defined
+
+- name: Show machine configuration
+  debug:
+    msg: |
+      Machine Profile: {{ machine_profile }}
+      Server Type: {{ server_type | default('N/A - not a server') }}
+      Hostname: {{ inventory_hostname }}
+
 - name: Generate Starship environment configuration
   template:
     src: starship-env.zsh.j2
