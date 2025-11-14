@@ -12,7 +12,6 @@ collections:
 
 roles:
   # macOS roles (used by playbooks/mac/*.yml)
-  - name: geerlingguy.dotfiles
   - name: elliotweiser.osx-command-line-tools
 
   # Work-specific role (private repository)

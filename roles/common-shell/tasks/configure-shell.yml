@@ -11,6 +11,12 @@
     state: directory
     mode: '0755'
 
+- name: Ensure .config/bat/themes directory exists
+  file:
+    path: "{{ ansible_env.HOME }}/.config/bat/themes"
+    state: directory
+    mode: '0755'
+
 - name: Detect server type from hostname
   set_fact:
     server_type: "{{ 'prod' if (inventory_hostname is match('^(prod|production).*')) else
@@ -25,10 +31,17 @@
 
 - name: Set Starship character and color based on machine type
   set_fact:
-    starship_char: "{{ '●' if machine_profile in ['server', 'homelab'] else 'λ' }}"
-    starship_color: "{{ catppuccin_green if machine_profile == 'homelab' else
-                        (catppuccin_mauve if machine_profile == 'server' else
-                        catppuccin_sapphire) }}"
+    starship_char: "{{ '!' if (machine_profile == 'server' and server_type in ['prod', 'production']) else
+                       ('●' if machine_profile == 'server' else
+                       'λ') }}"
+    starship_color: "{{ '#FF5370' if (machine_profile == 'server' and server_type in ['prod', 'production']) else
+                        ('#FFB86C' if (machine_profile == 'server' and server_type == 'dev-server') else
+                        ('#C792EA' if (machine_profile == 'server' and server_type == 'gaming-server') else
+                        ('#F78C6C' if (machine_profile == 'server' and server_type == 'dedicated-server') else
+                        ('#89DDFF' if (machine_profile == 'server' and server_type == 'homelab') else
+                        ('#89DDFF' if machine_profile == 'server' else
+                        ('#7FDBCA' if machine_profile == 'pro' else
+                        '#82AAFF')))))) }}"
 
 - name: Show machine configuration
   debug:
@@ -39,16 +52,28 @@
       Starship Character: {{ starship_char }}
       Starship Color: {{ starship_color }}
 
-- name: Generate Starship environment configuration
-  template:
-    src: starship-env.zsh.j2
-    dest: "{{ ansible_env.HOME }}/.config/shell/starship-env.zsh"
-    mode: '0644'
-
 - name: Generate Starship configuration with machine-specific colors
   template:
     src: starship.toml.j2
     dest: "{{ ansible_env.HOME }}/.config/starship.toml"
+    mode: '0644'
+
+- name: Download Catppuccin Mocha bat theme
+  get_url:
+    url: "https://raw.githubusercontent.com/catppuccin/bat/main/themes/Catppuccin%20Mocha.tmTheme"
+    dest: "{{ ansible_env.HOME }}/.config/bat/themes/Catppuccin Mocha.tmTheme"
+    mode: '0644'
+  register: bat_theme_download
+
+- name: Build bat cache (only if theme was downloaded/updated)
+  command: bat cache --build
+  when: bat_theme_download.changed
+  failed_when: false  # Don't fail if bat is not installed yet
+
+- name: Generate shell theme configuration
+  template:
+    src: shell-theme.zsh.j2
+    dest: "{{ ansible_env.HOME }}/.config/shell/theme.zsh"
     mode: '0644'
 
 - name: Set machine type marker (for documentation/debugging)
@@ -86,13 +111,14 @@
     path: "{{ ansible_env.HOME }}/.zshrc"
   register: existing_zshrc
 
-- name: Backup existing .zshrc if it exists
+- name: Backup existing .zshrc if it exists and is not already a symlink
   copy:
     src: "{{ ansible_env.HOME }}/.zshrc"
     dest: "{{ ansible_env.HOME }}/.zshrc.backup-{{ ansible_date_time.epoch }}"
     remote_src: yes
   when:
     - existing_zshrc.stat.exists
+    - not existing_zshrc.stat.islnk  # Only backup if it's NOT already a symlink
   register: backup_result
   failed_when: false  # Best effort - don't fail if backup can't be created
 
@@ -116,6 +142,37 @@
     path: "{{ ansible_env.HOME }}/.zsh.d"
     state: directory
     mode: '0755'
+
+- name: Symlink core zsh config files to .zsh.d
+  file:
+    src: "{{ dotfiles_repo }}/zsh/core/{{ item }}"
+    dest: "{{ ansible_env.HOME }}/.zsh.d/{{ item }}"
+    state: link
+    force: yes
+  loop:
+    - 01-zinit.zsh
+    - 10-path.zsh
+    - 20-env.zsh
+    - 25-tools.zsh
+    - 30-aliases.zsh
+    - 40-functions.zsh
+
+- name: Symlink profile zsh config files to .zsh.d
+  file:
+    src: "{{ dotfiles_repo }}/zsh/profiles/{{ machine_profile }}/{{ item }}"
+    dest: "{{ ansible_env.HOME }}/.zsh.d/{{ item }}"
+    state: link
+    force: yes
+  loop:
+    - plugins.zsh
+    - config.zsh
+    - overrides.zsh
+
+- name: Create machine type marker file
+  copy:
+    content: "{{ machine_profile }}"
+    dest: "{{ ansible_env.HOME }}/.zsh.d/.machine-type"
+    mode: '0644'
 
 - name: Include set-zsh-shell tasks
   include_tasks: set-zsh-shell.yml

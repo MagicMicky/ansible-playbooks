@@ -1,24 +1,37 @@
 ---
-# Catppuccin Mocha color palette
-# https://github.com/catppuccin/catppuccin
+# Catppuccin Mocha Theme Variables
+# Official color palette: https://catppuccin.com/palette
+# This file defines the base theme used across all machine types
 
-# Base colors
+theme_name: "catppuccin-mocha"
+theme_type: "dark"
+
+# ==============================================================================
+# Catppuccin Mocha - Accent Colors
+# ==============================================================================
+
+# Primary accent colors (used for machine-type differentiation)
+catppuccin_sapphire: "#74c7ec"  # Workstation accent (cyan/blue)
+catppuccin_teal: "#94e2d5"      # Alternative cyan
+catppuccin_green: "#a6e3a1"     # Homelab accent
+catppuccin_mauve: "#cba6f7"     # Server accent (purple)
+
+# Full accent palette
 catppuccin_rosewater: "#f5e0dc"
 catppuccin_flamingo: "#f2cdcd"
 catppuccin_pink: "#f5c2e7"
-catppuccin_mauve: "#cba6f7"
 catppuccin_red: "#f38ba8"
 catppuccin_maroon: "#eba0ac"
 catppuccin_peach: "#fab387"
 catppuccin_yellow: "#f9e2af"
-catppuccin_green: "#a6e3a1"
-catppuccin_teal: "#94e2d5"
 catppuccin_sky: "#89dceb"
-catppuccin_sapphire: "#74c7ec"
 catppuccin_blue: "#89b4fa"
 catppuccin_lavender: "#b4befe"
 
-# Neutral colors
+# ==============================================================================
+# Catppuccin Mocha - Base Colors
+# ==============================================================================
+
 catppuccin_text: "#cdd6f4"
 catppuccin_subtext1: "#bac2de"
 catppuccin_subtext0: "#a6adc8"
@@ -31,3 +44,71 @@ catppuccin_surface0: "#313244"
 catppuccin_base: "#1e1e2e"
 catppuccin_mantle: "#181825"
 catppuccin_crust: "#11111b"
+
+# ==============================================================================
+# Semantic Colors (consistent across all machine types)
+# ==============================================================================
+
+semantic_success: "{{ catppuccin_green }}"
+semantic_warning: "{{ catppuccin_yellow }}"
+semantic_error: "{{ catppuccin_red }}"
+semantic_info: "{{ catppuccin_blue }}"
+
+# ==============================================================================
+# Tool-Specific Theme Names
+# ==============================================================================
+
+# bat theme name (must match installed theme)
+bat_theme_name: "Catppuccin Mocha"
+
+# vivid theme name (used for LS_COLORS generation)
+vivid_theme_name: "catppuccin-mocha"
+
+# ==============================================================================
+# Machine Type Specific Configurations
+# ==============================================================================
+
+# Accent colors per machine profile
+machine_accents:
+  workstation:
+    primary: "{{ catppuccin_sapphire }}"
+    character: "λ"  # Unicode fallback
+    character_nerd: "nf-md-laptop"  # Nerd Font icon
+  homelab:
+    primary: "{{ catppuccin_green }}"
+    character: "·"
+    character_nerd: "·"  # No Nerd Font on servers
+  server:
+    primary: "{{ catppuccin_mauve }}"
+    character: "!"
+    character_nerd: "!"  # No Nerd Font on servers
+
+# ==============================================================================
+# FZF Color Configuration
+# ==============================================================================
+# Based on catppuccin/fzf official theme
+# https://github.com/catppuccin/fzf
+
+fzf_colors: >-
+  --color=bg+:{{ catppuccin_surface0 }},bg:{{ catppuccin_base }},spinner:{{ catppuccin_rosewater }},hl:{{ catppuccin_red }}
+  --color=fg:{{ catppuccin_text }},header:{{ catppuccin_red }},info:{{ catppuccin_mauve }},pointer:{{ catppuccin_rosewater }}
+  --color=marker:{{ catppuccin_rosewater }},fg+:{{ catppuccin_text }},prompt:{{ catppuccin_mauve }},hl+:{{ catppuccin_red }}
+  --color=border:{{ catppuccin_surface2 }}
+
+# ==============================================================================
+# EZA Color Configuration
+# ==============================================================================
+# Catppuccin-inspired colors for eza (ls replacement)
+
+# Using LS_COLORS format for eza compatibility
+eza_colors: "da={{ catppuccin_overlay0 }}"
+
+# ==============================================================================
+# Starship Base Colors (machine-specific overrides in template)
+# ==============================================================================
+
+starship_success_symbol: "{{ semantic_success }}"
+starship_error_symbol: "{{ semantic_error }}"
+starship_git_status_modified: "{{ catppuccin_yellow }}"
+starship_git_status_staged: "{{ catppuccin_green }}"
+starship_git_status_conflicted: "{{ catppuccin_red }}"
