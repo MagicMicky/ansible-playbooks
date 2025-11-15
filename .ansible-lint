@@ -5,9 +5,13 @@
 # Allow warnings for these rules (don't fail the build)
 warn_list:
   - yaml[line-length]              # Long lines are sometimes necessary for readability
+  - yaml[truthy]                   # Allow yes/no in addition to true/false
+  - yaml[octal-values]             # Allow implicit octal values (0700, 0440)
+  - yaml[comments]                 # Allow comments without starting space
   - name[casing]                   # Task naming style is subjective
   - risky-file-permissions         # We handle permissions intentionally
   - no-changed-when                # Sometimes we want to show changes
+  - command-instead-of-shell       # Sometimes shell is needed for pipes, etc.
   - command-instead-of-module      # Sometimes raw commands are more appropriate
 
 # Skip these rules entirely
