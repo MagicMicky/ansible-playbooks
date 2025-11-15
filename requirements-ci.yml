@@ -1,0 +1,19 @@
+---
+# CI-specific Ansible Galaxy Dependencies
+# Excludes private repositories for public CI testing
+
+collections:
+  # General community modules (used across all playbooks)
+  - name: community.general
+    version: ">=3.0.0"
+
+  # macOS-specific collection (for Mac playbooks)
+  - name: geerlingguy.mac
+
+roles:
+  # macOS roles (used by playbooks/mac/*.yml)
+  - name: elliotweiser.osx-command-line-tools
+
+# Note: work-tasks role is excluded (private repository)
+# This file is used by CI to avoid authentication issues
+# Full requirements.yml is used for local development
