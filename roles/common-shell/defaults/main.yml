@@ -10,9 +10,9 @@ machine_profile: personal
 # server_type: prod
 
 # Dotfiles configuration
-dotfiles_repo: "{{ ansible_env.HOME }}/Development/dotfiles"
-dotfiles_repo_url: ""  # Set in playbook
-dotfiles_branch: main
+dotfiles_dest: "{{ ansible_env.HOME }}/Development/dotfiles"  # Destination directory for cloned dotfiles
+dotfiles_repo_url: ""  # Source repository URL (set in playbook)
+dotfiles_branch: main  # Branch to checkout
 
 # Modern tools to install
 install_starship: true
@@ -35,7 +35,7 @@ machine_type_file: "{{ ansible_env.HOME }}/.config/shell/machine-type"
 enable_pro_file: "{{ ansible_env.HOME }}/.config/shell/laptop-pro"
 
 # Starship configuration
-starship_config_path: "{{ dotfiles_repo }}/starship/starship.toml"
+starship_config_path: "{{ dotfiles_dest }}/starship/starship.toml"
 
 # Shell configuration
 set_default_shell: true

@@ -9,7 +9,7 @@
 
   vars:
     machine_profile: wsl
-    # dotfiles_repo can be overridden in inventory for testing
+    # dotfiles_dest can be overridden in inventory for testing
     # Use inventory value if set, otherwise use default local path
     # Don't define if already set in inventory (avoid recursion)
 
@@ -28,7 +28,7 @@
         msg: |
           Deploying modern shell configuration to WSL
           Machine Profile: {{ machine_profile }}
-          Dotfiles Location: {{ dotfiles_repo }}
+          Dotfiles Location: {{ dotfiles_dest }}
           Branch: {{ dotfiles_branch }}
 
     - name: Ensure prerequisites are installed
