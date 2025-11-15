@@ -1,0 +1,44 @@
+# Ansible Lint Configuration
+# https://ansible.readthedocs.io/projects/lint/
+
+---
+# Allow warnings for these rules (don't fail the build)
+warn_list:
+  - yaml[line-length]              # Long lines are sometimes necessary for readability
+  - name[casing]                   # Task naming style is subjective
+  - risky-file-permissions         # We handle permissions intentionally
+  - no-changed-when                # Sometimes we want to show changes
+  - command-instead-of-module      # Sometimes raw commands are more appropriate
+
+# Skip these rules entirely
+skip_list:
+  - no-handler                     # We use direct commands where appropriate
+  - role-name                      # Our role names follow our conventions
+
+# Exclude certain paths from linting
+exclude_paths:
+  - roles/geerlingguy.dotfiles/    # External role
+  - roles/elliotweiser.osx-command-line-tools/  # External role
+  - .github/
+  - tests/fixtures/                # Test fixtures may have intentional issues
+
+# Enable offline mode (don't check for role updates)
+offline: false
+
+# Treat these as errors (fail the build)
+# All rules not in warn_list or skip_list will fail
+# This includes:
+# - syntax-check (critical)
+# - schema violations (critical)
+# - yaml syntax errors (critical)
+# - deprecated features (important)
+
+# Ansible version compatibility
+# Ensure playbooks work with our minimum supported version
+supported_ansible_also:
+  - "2.14"
+  - "2.15"
+  - "2.16"
+
+# Use default profile (balanced between strict and permissive)
+profile: production

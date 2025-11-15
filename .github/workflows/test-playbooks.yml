@@ -52,8 +52,8 @@ jobs:
 
       - name: Run ansible-lint
         run: |
-          ansible-lint playbooks/ || true
-          echo "Note: Warnings are acceptable, errors should be fixed"
+          ansible-lint playbooks/ --force-color --parseable
+          # Using .ansible-lint config: warnings allowed, errors fail the build
 
   test-ubuntu:
     name: Test Playbooks in Ubuntu
