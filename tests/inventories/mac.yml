@@ -13,7 +13,7 @@ all:
     ansible_user: "{{ lookup('env', 'USER') }}"
 
     # Machine profile for shell configuration
-    machine_profile: personal
+    machine_profile: laptop
 
     # Test environment dotfiles configuration
     # Override dotfiles settings to use test directory

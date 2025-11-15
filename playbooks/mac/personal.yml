@@ -17,7 +17,7 @@
           Configuring Personal Mac
           Dotfiles: {{ dotfiles_repo }}
           Branch: {{ dotfiles_repo_version }}
-          Machine Profile: personal
+          Machine Profile: laptop
 
   roles:
     # Homebrew installation and package management
@@ -27,7 +27,7 @@
     # Modern shell configuration (zinit, starship, modern tools)
     - role: common-shell
       vars:
-        machine_profile: personal
+        machine_profile: laptop
         dotfiles_repo_url: "{{ dotfiles_repo }}"
         dotfiles_branch: "{{ dotfiles_repo_version }}"
         dotfiles_dest: "{{ dotfiles_repo_local_destination | default(ansible_env.HOME ~ '/dotfiles') }}"
@@ -68,8 +68,8 @@
 
           Next steps:
           1. Restart your terminal or run: exec zsh
-          2. Verify shell: echo $MACHINE_TYPE (should be "personal")
-          3. Check prompt: Should show [λ] in blue
+          2. Verify shell: echo $MACHINE_TYPE (should be "laptop")
+          3. Check prompt: Should show [λ] in sapphire blue
 
           Modern shell features enabled:
           - Starship prompt with λ character
