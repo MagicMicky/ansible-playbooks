@@ -24,12 +24,9 @@ exclude_paths:
   - .github/
   - tests/fixtures/                # Test fixtures may have intentional issues
 
-# Enable offline mode (don't check for role updates)
-offline: false
-
-# Specify CI-specific requirements file for ansible-lint
-# This prevents it from trying to install private work-tasks role
-requirements_file: requirements-ci.yml
+# Enable offline mode to prevent automatic requirements.yml installation
+# Dependencies are pre-installed in CI via 'ansible-galaxy install -r requirements-ci.yml'
+offline: true
 
 # Treat these as errors (fail the build)
 # All rules not in warn_list or skip_list will fail

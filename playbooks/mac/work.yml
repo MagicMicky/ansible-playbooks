@@ -36,7 +36,7 @@
     - role: common-shell
       vars:
         machine_profile: pro  # Enables work-specific tools (AWS, Terraform, etc.)
-        dotfiles_repo: "{{ dotfiles_repo_local_destination }}"
+        dotfiles_dest: "{{ dotfiles_repo_local_destination }}"
         dotfiles_repo_url: "{{ dotfiles_repo }}"
         dotfiles_branch: "{{ dotfiles_repo_version }}"
       tags: ['shell', 'dotfiles']

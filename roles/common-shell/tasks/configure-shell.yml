@@ -109,13 +109,13 @@
 
 - name: Check if dotfiles repository exists
   stat:
-    path: "{{ dotfiles_repo }}"
+    path: "{{ dotfiles_dest }}"
   register: dotfiles_dir
 
 - name: Clone dotfiles repository
   git:
     repo: "{{ dotfiles_repo_url }}"
-    dest: "{{ dotfiles_repo }}"
+    dest: "{{ dotfiles_dest }}"
     version: "{{ dotfiles_branch }}"
     update: yes
   when:
@@ -150,7 +150,7 @@
 
 - name: Link new .zshrc
   file:
-    src: "{{ dotfiles_repo }}/zsh/.zshrc"
+    src: "{{ dotfiles_dest }}/zsh/.zshrc"
     dest: "{{ ansible_env.HOME }}/.zshrc"
     state: link
     force: yes
@@ -163,7 +163,7 @@
 
 - name: Symlink core zsh config files to .zsh.d
   file:
-    src: "{{ dotfiles_repo }}/zsh/core/{{ item }}"
+    src: "{{ dotfiles_dest }}/zsh/core/{{ item }}"
     dest: "{{ ansible_env.HOME }}/.zsh.d/{{ item }}"
     state: link
     force: yes
@@ -177,7 +177,7 @@
 
 - name: Symlink profile zsh config files to .zsh.d
   file:
-    src: "{{ dotfiles_repo }}/zsh/profiles/{{ machine_profile }}/{{ item }}"
+    src: "{{ dotfiles_dest }}/zsh/profiles/{{ machine_profile }}/{{ item }}"
     dest: "{{ ansible_env.HOME }}/.zsh.d/{{ item }}"
     state: link
     force: yes

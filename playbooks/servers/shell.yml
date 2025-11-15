@@ -8,8 +8,8 @@
 
   vars:
     machine_profile: server
-    # Note: dotfiles_repo defaults to /opt/dotfiles for servers (set in role defaults)
-    # Override in inventory for tests: dotfiles_repo: "{{ ansible_env.HOME }}/dotfiles-test"
+    # Note: dotfiles_dest defaults to /opt/dotfiles for servers (set in role defaults)
+    # Override in inventory for tests: dotfiles_dest: "{{ ansible_env.HOME }}/dotfiles-test"
     dotfiles_repo_url: "https://github.com/MagicMicky/dotfiles.git"
     dotfiles_branch: modern-shell-2025
 

@@ -6,7 +6,7 @@
 machine_profile: server
 
 # Dotfiles configuration
-dotfiles_repo: "/opt/dotfiles"
+dotfiles_dest: "/opt/dotfiles"
 dotfiles_repo_url: "https://github.com/MagicMicky/dotfiles.git"
 dotfiles_branch: modern-shell-2025  # Modern shell branch
 
