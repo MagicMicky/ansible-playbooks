@@ -52,9 +52,9 @@ machine_profile: personal  # personal, pro, server, wsl
 server_type: generic
 
 # Dotfiles configuration
-dotfiles_repo: ~/Development/terminal_improvements/dotfiles
-dotfiles_repo_url: git@github.com:MagicMicky/dotfiles.git
-dotfiles_branch: modern-shell-2025
+dotfiles_repo: "{{ ansible_env.HOME }}/dotfiles"
+dotfiles_repo_url: git@github.com:YourUsername/dotfiles.git
+dotfiles_branch: main
 
 # Tool installation (optional, defaults shown)
 install_starship: true
@@ -259,7 +259,7 @@ configure_iterm: true
 configure_vim: true
 
 # Dotfiles location
-dotfiles_repo_local_destination: ~/Development/terminal_improvements/dotfiles
+dotfiles_repo_local_destination: "{{ ansible_env.HOME }}/dotfiles"
 
 # Vim script (optional)
 vim_script: ~/.to_be_installed/vim/install.sh

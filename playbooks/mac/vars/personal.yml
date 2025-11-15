@@ -16,7 +16,7 @@ configure_work: no  # Personal machine
 dotfiles_repo: https://github.com/MagicMicky/dotfiles.git
 dotfiles_repo_accept_hostkey: yes
 dotfiles_repo_version: modern-shell-2025
-dotfiles_repo_local_destination: ~/Development/terminal_improvements/dotfiles
+dotfiles_repo_local_destination: "{{ ansible_env.HOME }}/dotfiles"
 dotfiles_home: "~"
 
 dotfiles_files:

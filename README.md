@@ -14,7 +14,7 @@ This is the central automation repository that replaces the old `ansible-roles/`
 ### Personal Mac
 
 ```bash
-cd ~/Development/terminal_improvements/ansible-playbooks
+cd ~/ansible-playbooks  # Or wherever you cloned this repo
 ansible-galaxy install -r requirements.yml
 ansible-playbook playbooks/mac/personal.yml -i inventories/localhost -K
 ```
@@ -197,7 +197,7 @@ One definition, multiple uses:
 
 ```bash
 # Clone if needed
-cd ~/Development/terminal_improvements
+cd ~
 git clone <repo-url> ansible-playbooks
 cd ansible-playbooks
 
