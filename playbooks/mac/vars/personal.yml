@@ -5,12 +5,14 @@
 downloads: ~/.ansible-downloads/
 
 # Feature toggles
-configure_dotfiles: yes
-configure_vim: yes
-configure_sublime: yes
-configure_iterm: yes
-configure_osx: yes
-configure_work: no  # Personal machine
+# Set these in your inventory file to override defaults
+# Defaults are defined in role defaults and can be overridden per-environment
+# configure_dotfiles: true
+# configure_vim: true
+# configure_sublime: true
+# configure_iterm: true
+# configure_osx: true
+# configure_work: false  # Personal machine
 
 # Dotfiles configuration
 dotfiles_repo: https://github.com/MagicMicky/dotfiles.git
