@@ -55,6 +55,7 @@
 
     - name: Configure sudoers
       import_tasks: ../../tasks/mac/sudoers.yml
+      when: configure_sudoers | default(false)
       tags: ['sudoers']
       become: yes
 
