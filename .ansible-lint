@@ -19,6 +19,8 @@ skip_list:
 exclude_paths:
   - roles/geerlingguy.dotfiles/    # External role
   - roles/elliotweiser.osx-command-line-tools/  # External role
+  - roles/work-tasks/              # Private role (not available in CI)
+  - playbooks/mac/work.yml         # Requires private work-tasks role
   - .github/
   - tests/fixtures/                # Test fixtures may have intentional issues
 
