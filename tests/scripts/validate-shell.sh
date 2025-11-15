@@ -54,21 +54,39 @@ if [ -x "$(command -v zsh)" ]; then
             PASSED=$((PASSED + 1))
 
             # Now measure startup time
-            if command -v /usr/bin/time > /dev/null 2>&1; then
-                # Measure startup time (run 3 times, take average)
-                total=0
-                runs=3
-                for i in $(seq 1 $runs); do
-                    time_output=$(/usr/bin/time -f "%E" zsh -i -c exit 2>&1)
-                    time_ms=$(echo "$time_output" | awk -F'[:.]+' '{if (NF >= 3) print ($1 * 60000) + ($2 * 1000) + ($3 * 10); else print 0}')
-                    # Handle empty or invalid output
+            # Use bash built-in time (portable across macOS and Linux)
+            # Measure startup time (run 3 times, take average)
+            total=0
+            runs=3
+            timing_failed=0
+
+            for i in $(seq 1 $runs); do
+                # Use bash's TIMEFORMAT and time built-in (portable)
+                TIMEFORMAT='%3R'
+                time_output=$( { time zsh -i -c exit > /dev/null 2>&1; } 2>&1 )
+
+                # Extract seconds (format: "0.123")
+                if [[ "$time_output" =~ ^[0-9]+\.[0-9]+ ]]; then
+                    # Convert to milliseconds
+                    time_ms=$(echo "$time_output" | awk '{printf "%d", $1 * 1000}')
+
+                    # Sanity check
                     if [ -z "$time_ms" ] || [ "$time_ms" -eq 0 ]; then
                         time_ms=100  # Default reasonable value
+                        timing_failed=1
                     fi
                     total=$((total + time_ms))
-                done
-                avg_time=$((total / runs))
+                else
+                    # Timing failed, use default
+                    time_ms=100
+                    total=$((total + time_ms))
+                    timing_failed=1
+                fi
+            done
 
+            avg_time=$((total / runs))
+
+            if [ $timing_failed -eq 0 ]; then
                 echo "  Average startup time: ${avg_time}ms"
 
                 # Check against target (100ms for laptop, 50ms for server)
@@ -82,7 +100,7 @@ if [ -x "$(command -v zsh)" ]; then
                     PASSED=$((PASSED + 1))
                 fi
             else
-                echo -e "  ${YELLOW}⚠ /usr/bin/time not available, skipping timing measurement${NC}"
+                echo -e "  ${YELLOW}⚠ Timing measurement unreliable, skipping${NC}"
                 PASSED=$((PASSED + 1))
             fi
         fi
