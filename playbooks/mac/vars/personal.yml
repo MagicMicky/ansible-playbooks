@@ -1,30 +1,15 @@
 ---
 # Personal Mac configuration variables
-# Based on mac-dev-playbook/config.yml
+# Cleaned up - removed unused/broken references
 
+# Downloads directory for Ansible temporary files
 downloads: ~/.ansible-downloads/
-
-# Feature toggles
-# Set these in your inventory file to override defaults
-# Defaults are defined in role defaults and can be overridden per-environment
-# configure_dotfiles: true
-# configure_vim: true
-# configure_sublime: true
-# configure_iterm: true
-# configure_osx: true
-# configure_work: false  # Personal machine
 
 # Dotfiles configuration
 dotfiles_repo: https://github.com/MagicMicky/dotfiles.git
-dotfiles_repo_accept_hostkey: yes
+dotfiles_repo_accept_hostkey: true
 dotfiles_repo_version: modern-shell-2025
 dotfiles_repo_local_destination: "{{ ansible_env.HOME }}/dotfiles"
-dotfiles_home: "~"
-
-dotfiles_files:
-  - .gitconfig
-  - .to_be_installed
-  - .zshrc
 
 # Homebrew packages
 homebrew_installed_packages:
@@ -51,14 +36,13 @@ homebrew_cask_apps:
   - spotify
   - qlmarkdown
 
-# Vim configuration
-vim_script: "~/.to_be_installed/vim/install.sh"
-
-# Package managers (empty by default, configure as needed)
+# Package managers (configure as needed)
+# These are only installed if you add packages to the lists
 composer_packages: []
 gem_packages: []
 npm_packages: []
 pip_packages: []
 
-# Post-provision tasks
+# Post-provision tasks (optional)
+# Add paths to task files to run after main provisioning
 post_provision_tasks: []
