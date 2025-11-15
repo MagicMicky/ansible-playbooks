@@ -1,7 +1,7 @@
 ---
 # Personal Mac Setup Playbook
-# Replaces mac-dev-playbook/main.yml for personal machines
-# Uses consolidated shared roles from ansible-playbooks/roles/
+# Simplified and cleaned up version - removes broken/unused components
+# Focus: Modern shell setup via common-shell role + Homebrew package management
 
 - name: Configure Personal Mac
   hosts: localhost
@@ -10,14 +10,9 @@
   vars_files:
     - vars/personal.yml
 
-  handlers:
-    - name: Restart Dock
-      shell: killall Dock
-      failed_when: false  # OK to fail: Dock may not be running (headless, CI)
-
   pre_tasks:
     - name: Display deployment information
-      debug:
+      ansible.builtin.debug:
         msg: |
           Configuring Personal Mac
           Dotfiles: {{ dotfiles_repo }}
@@ -40,7 +35,7 @@
 
     # macOS system preferences and fonts
     - role: mac-system
-      when: configure_osx
+      when: configure_osx | default(false)
       tags: ['osx', 'system', 'fonts']
 
     # Application configurations (Sublime, iTerm, Vim)
@@ -49,28 +44,25 @@
       tags: ['apps', 'config']
 
   tasks:
-    - name: Setup Ansible directories
-      import_tasks: ../../tasks/mac/ansible-setup.yml
-      tags: ['ansible']
-
-    - name: Configure sudoers
-      import_tasks: ../../tasks/mac/sudoers.yml
-      when: configure_sudoers | default(false)
-      tags: ['sudoers']
-      become: yes
-
+    # Install extra packages if any are defined
     - name: Install extra packages
-      import_tasks: ../../tasks/mac/extra-packages.yml
+      ansible.builtin.import_tasks: ../../tasks/mac/extra-packages.yml
+      when: >
+        (composer_packages | default([]) | length > 0) or
+        (npm_packages | default([]) | length > 0) or
+        (pip_packages | default([]) | length > 0) or
+        (gem_packages | default([]) | length > 0)
       tags: ['packages', 'extra']
 
+    # Run optional post-provision tasks
     - name: Run post-provision tasks
-      include_tasks: "{{ item }}"
+      ansible.builtin.include_tasks: "{{ item }}"
       with_fileglob: "{{ post_provision_tasks | default([]) }}"
       tags: ['post']
 
   post_tasks:
     - name: Display completion message
-      debug:
+      ansible.builtin.debug:
         msg: |
           Personal Mac configuration complete!
 
