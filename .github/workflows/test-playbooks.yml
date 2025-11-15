@@ -57,8 +57,9 @@ jobs:
 
       - name: Run ansible-lint
         run: |
-          ansible-lint playbooks/ --force-color --parseable
+          ansible-lint playbooks/wsl/ playbooks/servers/ playbooks/mac/personal.yml --force-color --parseable
           # Using .ansible-lint config: warnings allowed, errors fail the build
+          # Note: Excludes playbooks/mac/work.yml (requires private work-tasks role)
 
   test-ubuntu:
     name: Test Playbooks in Ubuntu
