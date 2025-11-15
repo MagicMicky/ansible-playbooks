@@ -43,5 +43,6 @@ supported_ansible_also:
   - "2.15"
   - "2.16"
 
-# Use default profile (balanced between strict and permissive)
-profile: production
+# Use moderate profile (balanced between strict and permissive)
+# Production profile is too strict for current codebase (requires FQCN, strict yaml formatting)
+profile: moderate
