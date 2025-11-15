@@ -120,6 +120,10 @@ run_test_in_container "wsl-test" \
     "WSL Profile Isolation" \
     "bash tests/scripts/validate-profile-isolation.sh"
 
+run_test_in_container "wsl-test" \
+    "WSL Config Content" \
+    "bash tests/scripts/validate-config-content.sh"
+
 # ============================================================================
 # Test Suite 3: Server Playbook (in server-test container)
 # ============================================================================
@@ -155,6 +159,10 @@ run_test_in_container "server-test" \
 run_test_in_container "server-test" \
     "Server Profile Isolation" \
     "bash tests/scripts/validate-profile-isolation.sh"
+
+run_test_in_container "server-test" \
+    "Server Config Content" \
+    "bash tests/scripts/validate-config-content.sh"
 
 # ============================================================================
 # Test Summary
