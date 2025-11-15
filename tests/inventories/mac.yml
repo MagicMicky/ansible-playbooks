@@ -16,8 +16,13 @@ all:
     machine_profile: personal
 
     # Test environment dotfiles configuration
-    # Override local destination to avoid conflicts with actual dotfiles
-    dotfiles_repo_local_destination: "{{ ansible_env.HOME }}/dotfiles-test"
+    # Override dotfiles settings to use test directory
+    # Note: dotfiles_repo in vars/personal.yml is the SOURCE URL
+    # dotfiles_repo_local_destination is the DESTINATION path
+    dotfiles_repo: "https://github.com/MagicMicky/dotfiles.git"  # Source repo URL
+    dotfiles_repo_local_destination: "{{ ansible_env.HOME }}/dotfiles-test"  # Destination path
+    dotfiles_repo_version: modern-shell-2025  # Branch to checkout
+    dotfiles_repo_accept_hostkey: yes  # Accept SSH host key
 
     # Downloads directory
     downloads: ~/.ansible-downloads/
