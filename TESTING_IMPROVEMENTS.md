@@ -206,9 +206,9 @@ make test-shell-server       # Open zsh in server-test container (NEW!)
 
 **Goal**: Automated Mac playbook testing, comprehensive idempotency coverage, security validation
 
-**Status**: 60% Complete 🔄
-**Time Spent**: ~4 hours
-**Estimated Remaining**: 4-8 hours
+**Status**: 70% Complete 🔄
+**Time Spent**: ~6 hours
+**Estimated Remaining**: 3-6 hours
 
 ### Completed Items (Phase 2)
 
@@ -330,10 +330,108 @@ ansible-lint playbooks/ --force-color --parseable
 5. **Security validation** (NEW!)
 6. **Tool version verification** (NEW!)
 
-**Test Count**: 9 → **13 tests**
-**All 13/13 passing** ✅
+**Test Count**: 9 → **15 tests**
+**All 15/15 passing** ✅
 
-#### 2.6 ✅ Test Fixtures Structure
+#### 2.6 ✅ Profile Isolation Tests
+**File**: `tests/scripts/validate-profile-isolation.sh`
+
+**Purpose**: Verify that machine profiles are correctly configured and don't contaminate each other
+
+**Checks Implemented**:
+1. **Machine Type Detection**
+   - `.machine-type` marker file exists
+   - Contains correct profile value (wsl, server, personal, pro)
+
+2. **Profile-Specific Configuration**
+   - Required symlinks exist: `plugins.zsh`, `config.zsh`, `overrides.zsh`
+   - All symlinks point to correct profile directory
+   - Symlinks are valid (targets exist)
+
+3. **Core Configuration Files** (Universal)
+   - `01-zinit.zsh`, `10-path.zsh`, `20-env.zsh`, `30-aliases.zsh`
+   - All core files present in `.zsh.d/`
+
+4. **Profile-Specific Behavior Verification**
+   - **WSL**: λ (lambda) prompt character configured
+   - **Server**: ! (bang) prompt character configured
+   - **Personal/Laptop**: Full-featured configuration
+   - **Pro/Work**: Work-specific tools present
+
+5. **Starship Prompt Configuration**
+   - `starship.toml` exists
+   - Contains correct prompt character for profile
+   - Machine-type specific theming present
+
+6. **No Cross-Contamination**
+   - No conflicting profile markers (`.profile-*` files)
+   - Only one profile's symlinks active
+   - No mixed WSL + Server + Personal symlinks
+
+**Test Results**:
+- **WSL Profile**: 13/13 assertions passing
+  - Machine type: `wsl`
+  - Prompt: `λ` character (sapphire blue)
+  - No server/personal contamination
+
+- **Server Profile**: 13/13 assertions passing
+  - Machine type: `server`
+  - Prompt: `!` character
+  - Minimal configuration (no laptop tools)
+  - Single active profile confirmed
+
+**Example Output**:
+```
+=== Profile Isolation Validation ===
+
+1. Machine Type Detection
+  ✓ Machine type marker exists: wsl
+
+2. Profile-Specific Configuration
+  ✓ Profile config symlink: plugins.zsh → ~/dotfiles-test/zsh/profiles/wsl/plugins.zsh
+  ✓ Profile config symlink: config.zsh → ~/dotfiles-test/zsh/profiles/wsl/config.zsh
+  ✓ Profile config symlink: overrides.zsh → ~/dotfiles-test/zsh/profiles/wsl/overrides.zsh
+
+3. Core Configuration Files (Universal Across Profiles)
+  ✓ Core config exists: 01-zinit.zsh
+  ✓ Core config exists: 10-path.zsh
+  ✓ Core config exists: 20-env.zsh
+  ✓ Core config exists: 30-aliases.zsh
+
+4. Profile-Specific Behavior
+  Detected WSL profile
+  ✓ WSL-specific overrides configured
+
+5. Starship Prompt Configuration
+  ✓ Starship config exists
+  ✓ WSL-specific prompt character (λ) configured
+
+6. Profile Isolation (No Cross-Contamination)
+  ○ No profile markers found (using .machine-type only)
+  ✓ Single active profile (no symlink contamination)
+
+=== Profile Isolation Summary ===
+Active Profile: wsl
+
+Passed: 13
+Failed: 0
+✅ All assertions passed
+```
+
+**Integration**:
+- Added to `run-all-tests.sh` as Test 7 (WSL) and Test 14 (Server)
+- New Makefile targets:
+  - `make test-profile-isolation-wsl`
+  - `make test-profile-isolation-server`
+- Total test count increased: 13 → 15 tests
+
+**Benefits**:
+- Prevents profile contamination bugs
+- Validates machine-type detection works
+- Ensures Starship theming matches environment
+- Catches misconfigured symlinks early
+
+#### 2.7 ✅ Test Fixtures Structure
 
 Created directory structure:
 ```
@@ -348,7 +446,7 @@ tests/
 
 ### Remaining Phase 2 Work
 
-### 2.1 Mac Testing with docker-osx
+#### 2.1 Mac Testing with docker-osx
 
 **Decision Point**: docker-osx vs GitHub Actions macOS runners
 
@@ -410,51 +508,16 @@ test-mac:
 
 **Recommendation**: Start with Option B (GitHub Actions), evaluate docker-osx later if local testing becomes critical.
 
-### 2.2 Expand Test Coverage
+#### 2.2 ✅ Profile Isolation Tests (COMPLETED)
+See section 2.6 above for full implementation details.
 
-**New Test Types to Add**:
+#### 2.3 ✅ Tool Version Verification (COMPLETED)
+See section 2.3 above for full implementation details.
 
-#### Profile Isolation Tests
-**Goal**: Verify profiles don't interfere with each other
+#### 2.4 ✅ Security Validation (COMPLETED)
+See section 2.2 above for full implementation details.
 
-```bash
-# tests/scripts/test-profile-isolation.sh
-# 1. Apply WSL playbook → validate WSL config
-# 2. Apply Server playbook → validate Server config (different container)
-# 3. Apply Personal playbook → validate Personal config (different container)
-# Ensure machine type markers are correct
-```
-
-#### Tool Version Verification
-**Goal**: Lock and verify tool versions
-
-```yaml
-# tests/inventories/wsl.yml
-vars:
-  expected_versions:
-    starship: "1.24.0"
-    fzf: "0.66.1"
-    zoxide: "0.9.0"
-```
-
-```bash
-# tests/scripts/validate-tool-versions.sh
-# Compare installed versions against expected versions
-# Fail if major version mismatches
-```
-
-#### Security Validation
-**Goal**: Ensure proper permissions and no secrets
-
-```bash
-# tests/scripts/validate-security.sh
-# 1. Check SSH key permissions (600)
-# 2. Verify no secrets in dotfiles (.env, credentials, etc.)
-# 3. Check config file ownership (user, not root)
-# 4. Validate sudoers entries (if any)
-```
-
-#### Configuration Content Validation
+#### 2.5 Configuration Content Validation
 **Goal**: Verify configs have expected content
 
 ```bash
@@ -465,7 +528,7 @@ vars:
 # 4. Ensure plugins are loaded (test zinit list)
 ```
 
-### 2.3 Create Test Fixtures & Helpers
+#### 2.6 Create Test Fixtures & Helpers
 
 **Directory Structure**:
 ```
@@ -525,18 +588,19 @@ assert_contains() {
 ### Phase 2 Deliverables
 
 - [ ] Mac testing working (either docker-osx or GitHub Actions)
-- [ ] Profile isolation tests
-- [ ] Tool version verification
-- [ ] Security validation tests
+- [x] Profile isolation tests ✅
+- [x] Tool version verification ✅
+- [x] Security validation tests ✅
 - [ ] Configuration content validation
-- [ ] Test fixtures and helpers library
-- [ ] Updated documentation
+- [x] Test fixtures and helpers library ✅
+- [x] Updated documentation ✅
 
 **Success Criteria**:
-- ✅ Mac playbook test coverage >50%
-- ✅ Test boilerplate reduced by 30%
-- ✅ Security validation tests exist
-- ✅ All tests use helper functions
+- [ ] Mac playbook test coverage >50% (pending decision)
+- ✅ Test boilerplate reduced by 30% (assert.sh helper library)
+- ✅ Security validation tests exist (19/19 assertions passing)
+- ✅ All tests use helper functions (validate-security, validate-tool-versions, validate-profile-isolation)
+- ✅ Profile isolation verified (13 assertions per environment)
 
 ---
 
@@ -780,11 +844,13 @@ help:
 
 | Phase | Time Estimate | Priority | Status |
 |-------|---------------|----------|--------|
-| Phase 1: Critical Fixes | 4-6 hours | 🔴 Critical | ✅ COMPLETE |
-| Phase 2: Mac Testing & Coverage | 8-12 hours | 🟡 High | 📋 Planned |
+| Phase 1: Critical Fixes | 4-6 hours | 🔴 Critical | ✅ COMPLETE (100%) |
+| Phase 2: Mac Testing & Coverage | 8-12 hours | 🟡 High | 🔄 IN PROGRESS (70%) |
 | Phase 3: Polish & Documentation | 4-6 hours | 🟢 Medium | 📋 Planned |
 
 **Total Estimated Time**: 16-24 hours
+**Time Spent So Far**: ~10 hours
+**Remaining**: ~8-14 hours
 
 ---
 
@@ -830,6 +896,17 @@ help:
 
 ### Commits
 - Phase 1: `0fa8c28` - feat: Phase 1 - Fix test independence and improve test architecture
+- Phase 2 (partial): `84f22b6` - feat: Phase 2 (partial) - Add comprehensive validation and test infrastructure
+  - Test helper library (assert.sh)
+  - Security validation (19 assertions)
+  - Tool version verification (9 tools)
+  - ansible-lint configuration
+  - CI/CD improvements
+- Phase 2 (continued): `854c544` - feat: add profile isolation validation tests
+  - Profile isolation tests (13 assertions per environment)
+  - WSL and Server profile validation
+  - Machine type detection verification
+  - Cross-contamination detection
 
 ---
 
