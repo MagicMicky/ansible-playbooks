@@ -24,6 +24,18 @@
           Branch: {{ dotfiles_repo_version }}
           Machine Profile: personal
 
+    - name: DEBUG - Show dotfiles variables
+      debug:
+        msg: |
+          dotfiles_repo = {{ dotfiles_repo }}
+          dotfiles_repo_local_destination = {{ dotfiles_repo_local_destination }}
+          dotfiles_repo_version = {{ dotfiles_repo_version }}
+
+          Will pass to role:
+          dotfiles_repo (dest) = {{ dotfiles_repo_local_destination }}
+          dotfiles_repo_url (source) = {{ dotfiles_repo }}
+          dotfiles_branch = {{ dotfiles_repo_version }}
+
   roles:
     # Homebrew installation and package management
     - role: geerlingguy.mac.homebrew
