@@ -177,6 +177,14 @@ test-validation-server: test-docker-up ## [VALIDATION] Validate server shell con
 	@printf '$(BLUE)Validating server shell configuration...$(NC)\n'
 	cd tests/docker && docker compose exec -T server-test /ansible/tests/scripts/validate-shell.sh
 
+test-profile-isolation-wsl: test-docker-up ## [VALIDATION] Validate WSL profile isolation
+	@printf '$(BLUE)Validating WSL profile isolation...$(NC)\n'
+	cd tests/docker && docker compose exec -T wsl-test /ansible/tests/scripts/validate-profile-isolation.sh
+
+test-profile-isolation-server: test-docker-up ## [VALIDATION] Validate server profile isolation
+	@printf '$(BLUE)Validating server profile isolation...$(NC)\n'
+	cd tests/docker && docker compose exec -T server-test /ansible/tests/scripts/validate-profile-isolation.sh
+
 ## ═══════════════════════════════════════════════════════════
 ## Code Quality
 ## ═══════════════════════════════════════════════════════════
