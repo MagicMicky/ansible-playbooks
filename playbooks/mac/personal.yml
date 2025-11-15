@@ -45,6 +45,7 @@
 
     # Application configurations (Sublime, iTerm, Vim)
     - role: app-config
+      when: (configure_sublime | default(false)) or (configure_iterm | default(false)) or (configure_vim | default(false))
       tags: ['apps', 'config']
 
   tasks:
