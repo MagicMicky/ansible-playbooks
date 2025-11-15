@@ -108,6 +108,14 @@ run_test_in_container "wsl-test" \
     "WSL Idempotency" \
     "bash tests/scripts/test-idempotency.sh playbooks/wsl/setup.yml tests/inventories/wsl.yml"
 
+run_test_in_container "wsl-test" \
+    "WSL Security Validation" \
+    "bash tests/scripts/validate-security.sh"
+
+run_test_in_container "wsl-test" \
+    "WSL Tool Versions" \
+    "bash tests/scripts/validate-tool-versions.sh"
+
 # ============================================================================
 # Test Suite 3: Server Playbook (in server-test container)
 # ============================================================================
@@ -132,6 +140,14 @@ run_test_in_container "server-test" \
     "Server Idempotency" \
     "bash tests/scripts/test-idempotency.sh playbooks/servers/shell.yml tests/inventories/ubuntu.yml"
 
+run_test_in_container "server-test" \
+    "Server Security Validation" \
+    "bash tests/scripts/validate-security.sh"
+
+run_test_in_container "server-test" \
+    "Server Tool Versions" \
+    "bash tests/scripts/validate-tool-versions.sh"
+
 # ============================================================================
 # Test Summary
 # ============================================================================
@@ -150,6 +166,8 @@ if [ $FAILED_TESTS -eq 0 ]; then
     echo ""
     echo -e "${BLUE}Test isolation: ✓ WSL and Server tests ran in separate containers${NC}"
     echo -e "${BLUE}Idempotency: ✓ Both playbooks tested for idempotency${NC}"
+    echo -e "${BLUE}Security: ✓ Security validation passed for both environments${NC}"
+    echo -e "${BLUE}Versions: ✓ Tool versions verified${NC}"
     exit 0
 else
     echo -e "${RED}❌ SOME TESTS FAILED${NC}"
