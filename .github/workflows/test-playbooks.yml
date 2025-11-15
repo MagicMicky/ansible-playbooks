@@ -143,19 +143,119 @@ jobs:
         run: |
           ./tests/scripts/test-idempotency.sh ${{ matrix.playbook }} tests/inventories/wsl.yml
 
+  test-macos:
+    name: Test Mac Playbooks
+    runs-on: macos-latest
+    needs: syntax-check
+    strategy:
+      matrix:
+        playbook:
+          - playbooks/mac/personal.yml
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Ansible
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible
+
+      - name: Install system dependencies
+        run: |
+          # Install zsh (usually pre-installed on macOS)
+          brew install zsh git wget
+
+      - name: Install Galaxy dependencies
+        run: ansible-galaxy install -r requirements.yml --ignore-errors
+        # Note: --ignore-errors allows work-tasks (private repo) to fail
+
+      - name: Run playbook (check mode)
+        run: |
+          ansible-playbook ${{ matrix.playbook }} -i tests/inventories/mac.yml --check
+
+      - name: Run playbook (apply)
+        run: |
+          ansible-playbook ${{ matrix.playbook }} -i tests/inventories/mac.yml
+
+      - name: Validate shell configuration
+        run: ./tests/scripts/validate-shell.sh
+
+      - name: Validate security
+        run: ./tests/scripts/validate-security.sh
+
+      - name: Validate tool versions
+        run: ./tests/scripts/validate-tool-versions.sh
+
+      - name: Validate profile isolation
+        run: ./tests/scripts/validate-profile-isolation.sh
+
+  test-macos-idempotency:
+    name: Test Mac Idempotency
+    runs-on: macos-latest
+    needs: test-macos
+    strategy:
+      matrix:
+        playbook:
+          - playbooks/mac/personal.yml
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Ansible
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible
+
+      - name: Install system dependencies
+        run: |
+          brew install zsh git wget
+
+      - name: Install Galaxy dependencies
+        run: ansible-galaxy install -r requirements.yml --ignore-errors
+
+      - name: Test idempotency
+        run: |
+          ./tests/scripts/test-idempotency.sh ${{ matrix.playbook }} tests/inventories/mac.yml
+
   summary:
     name: Test Summary
     runs-on: ubuntu-latest
-    needs: [syntax-check, ansible-lint, test-ubuntu, test-idempotency]
+    needs: [syntax-check, ansible-lint, test-ubuntu, test-idempotency, test-macos, test-macos-idempotency]
     if: always()
     steps:
       - name: Check test results
         run: |
           echo "::notice::All test jobs completed"
+          echo ""
+          echo "Test Results:"
+          echo "  Syntax Check: ${{ needs.syntax-check.result }}"
+          echo "  Ansible Lint: ${{ needs.ansible-lint.result }}"
+          echo "  Ubuntu Tests: ${{ needs.test-ubuntu.result }}"
+          echo "  Ubuntu Idempotency: ${{ needs.test-idempotency.result }}"
+          echo "  macOS Tests: ${{ needs.test-macos.result }}"
+          echo "  macOS Idempotency: ${{ needs.test-macos-idempotency.result }}"
+          echo ""
+
           if [[ "${{ needs.syntax-check.result }}" == "success" ]] && \
+             [[ "${{ needs.ansible-lint.result }}" == "success" ]] && \
              [[ "${{ needs.test-ubuntu.result }}" == "success" ]] && \
-             [[ "${{ needs.test-idempotency.result }}" == "success" ]]; then
+             [[ "${{ needs.test-idempotency.result }}" == "success" ]] && \
+             [[ "${{ needs.test-macos.result }}" == "success" ]] && \
+             [[ "${{ needs.test-macos-idempotency.result }}" == "success" ]]; then
             echo "✅ All tests passed!"
+            echo "  - Ubuntu (WSL + Server): ✅"
+            echo "  - macOS (Personal): ✅"
+            echo "  - Idempotency (all platforms): ✅"
             exit 0
           else
             echo "❌ Some tests failed"

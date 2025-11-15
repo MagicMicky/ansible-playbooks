@@ -1,0 +1,60 @@
+---
+# Test inventory for macOS environment
+# Used for testing Mac playbooks in GitHub Actions macOS runners
+
+all:
+  hosts:
+    localhost:
+      ansible_connection: local
+      ansible_python_interpreter: /usr/bin/python3
+
+  vars:
+    # Test user settings
+    ansible_user: "{{ lookup('env', 'USER') }}"
+
+    # Machine profile for shell configuration
+    machine_profile: personal
+
+    # Test environment dotfiles configuration
+    # Clone from public GitHub repo (simulates real deployment)
+    dotfiles_repo: https://github.com/MagicMicky/dotfiles.git
+    dotfiles_repo_accept_hostkey: yes
+    dotfiles_repo_version: modern-shell-2025
+    dotfiles_repo_local_destination: "{{ ansible_env.HOME }}/dotfiles-test"
+    dotfiles_home: "~"
+
+    # Downloads directory
+    downloads: ~/.ansible-downloads/
+
+    # Feature toggles for CI testing
+    # Disable GUI/system modifications in CI
+    configure_dotfiles: yes
+    configure_vim: no  # Skip vim setup in CI
+    configure_sublime: no  # Skip Sublime Text in CI
+    configure_iterm: no  # Skip iTerm2 in CI
+    configure_osx: no  # Skip macOS system preferences in CI (requires sudo)
+    configure_work: no  # Personal machine profile
+
+    # Homebrew configuration
+    # Install essential packages only for faster CI
+    homebrew_installed_packages:
+      - zsh
+      - git
+      - wget
+      - jq
+
+    homebrew_taps:
+      - homebrew/core
+
+    # Skip GUI apps in CI
+    homebrew_cask_appdir: /Applications
+    homebrew_cask_apps: []
+
+    # Empty package managers for CI
+    composer_packages: []
+    gem_packages: []
+    npm_packages: []
+    pip_packages: []
+
+    # No post-provision tasks in CI
+    post_provision_tasks: []
