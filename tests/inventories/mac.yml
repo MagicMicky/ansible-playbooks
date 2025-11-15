@@ -16,12 +16,8 @@ all:
     machine_profile: personal
 
     # Test environment dotfiles configuration
-    # Clone from public GitHub repo (simulates real deployment)
-    dotfiles_repo: https://github.com/MagicMicky/dotfiles.git
-    dotfiles_repo_accept_hostkey: yes
-    dotfiles_repo_version: modern-shell-2025
+    # Override local destination to avoid conflicts with actual dotfiles
     dotfiles_repo_local_destination: "{{ ansible_env.HOME }}/dotfiles-test"
-    dotfiles_home: "~"
 
     # Downloads directory
     downloads: ~/.ansible-downloads/
