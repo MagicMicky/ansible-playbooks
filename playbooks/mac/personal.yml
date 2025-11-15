@@ -45,9 +45,9 @@
     - role: common-shell
       vars:
         machine_profile: personal
-        dotfiles_repo: "{{ dotfiles_repo_local_destination }}"
         dotfiles_repo_url: "{{ dotfiles_repo }}"
         dotfiles_branch: "{{ dotfiles_repo_version }}"
+        dotfiles_repo: "{{ dotfiles_repo_local_destination }}"
       tags: ['shell', 'dotfiles']
 
     # macOS system preferences and fonts
