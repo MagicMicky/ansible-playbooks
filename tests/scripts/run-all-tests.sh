@@ -116,6 +116,10 @@ run_test_in_container "wsl-test" \
     "WSL Tool Versions" \
     "bash tests/scripts/validate-tool-versions.sh"
 
+run_test_in_container "wsl-test" \
+    "WSL Profile Isolation" \
+    "bash tests/scripts/validate-profile-isolation.sh"
+
 # ============================================================================
 # Test Suite 3: Server Playbook (in server-test container)
 # ============================================================================
@@ -147,6 +151,10 @@ run_test_in_container "server-test" \
 run_test_in_container "server-test" \
     "Server Tool Versions" \
     "bash tests/scripts/validate-tool-versions.sh"
+
+run_test_in_container "server-test" \
+    "Server Profile Isolation" \
+    "bash tests/scripts/validate-profile-isolation.sh"
 
 # ============================================================================
 # Test Summary
