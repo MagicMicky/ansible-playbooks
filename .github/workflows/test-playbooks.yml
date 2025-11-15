@@ -51,8 +51,8 @@ jobs:
           pip install ansible ansible-lint
 
       - name: Install Galaxy dependencies
-        run: ansible-galaxy install -r requirements.yml --ignore-errors
-        # Note: --ignore-errors allows work-tasks (private repo) to fail
+        run: ansible-galaxy install -r requirements.yml --ignore-errors || true
+        # Note: --ignore-errors + || true allows work-tasks (private repo) to fail
         # We only lint public playbooks (wsl, servers, mac) in CI
 
       - name: Run ansible-lint
