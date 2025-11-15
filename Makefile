@@ -42,16 +42,19 @@ install: deps ## Install pre-commit hooks and dependencies
 ## Testing Commands
 ## ═══════════════════════════════════════════════════════════
 
-test: test-all ## [MAIN] Run complete test suite (syntax + Docker tests)
+test: deps test-syntax test-docker-build test-docker-up ## [MAIN] Run complete test suite in isolated containers (~8-12min)
+	@printf '$(BLUE)╔════════════════════════════════════════════════════════╗$(NC)\n'
+	@printf '$(BLUE)║  Running Test Suite                                   ║$(NC)\n'
+	@printf '$(BLUE)║  - WSL tests in wsl-test container                    ║$(NC)\n'
+	@printf '$(BLUE)║  - Server tests in server-test container              ║$(NC)\n'
+	@printf '$(BLUE)║  - Full idempotency coverage                          ║$(NC)\n'
+	@printf '$(BLUE)╚════════════════════════════════════════════════════════╝$(NC)\n'
+	@./tests/scripts/run-all-tests.sh
+	@$(MAKE) test-docker-down
 
-test-syntax: ## [FAST] Syntax check all playbooks (no Docker needed)
+test-syntax: ## [FAST] Syntax check all playbooks (no Docker needed ~10s)
 	@printf '$(BLUE)Running syntax validation...$(NC)\n'
 	@./tests/scripts/validate-syntax.sh
-
-test-all: deps test-syntax test-docker-build test-docker-up ## [FULL] Complete test suite: syntax, playbooks, validation
-	@printf '$(BLUE)Running complete test suite...$(NC)\n'
-	cd tests/docker && docker compose exec -T ubuntu-test /ansible/tests/scripts/run-all-tests.sh
-	@$(MAKE) test-docker-down
 
 ## ═══════════════════════════════════════════════════════════
 ## Docker Container Management
@@ -69,10 +72,20 @@ test-docker-down: ## [CLEANUP] Stop Docker test containers
 	@printf '$(BLUE)Stopping Docker test containers...$(NC)\n'
 	cd tests/docker && docker compose down
 
-test-docker-shell: ## [DEBUG] Open interactive shell in test container
-	@printf '$(BLUE)Opening shell in ubuntu-test container...$(NC)\n'
+test-shell: test-docker-up ## [DEBUG] Open interactive zsh shell in WSL test container
+	@printf '$(BLUE)╔════════════════════════════════════════════════════════╗$(NC)\n'
+	@printf '$(BLUE)║  Interactive Shell - WSL Test Container               ║$(NC)\n'
+	@printf '$(BLUE)╚════════════════════════════════════════════════════════╝$(NC)\n'
+	@printf '\n'
+	@printf '$(YELLOW)Opening zsh shell in wsl-test container...$(NC)\n'
 	@printf '$(YELLOW)Tip: Type "exit" to leave container$(NC)\n'
-	cd tests/docker && docker compose exec ubuntu-test /bin/bash
+	@printf '\n'
+	cd tests/docker && docker compose exec wsl-test zsh || docker compose exec wsl-test /bin/bash
+
+test-shell-server: test-docker-up ## [DEBUG] Open interactive zsh shell in server test container
+	@printf '$(BLUE)Opening zsh shell in server-test container...$(NC)\n'
+	@printf '$(YELLOW)Tip: Type "exit" to leave container$(NC)\n'
+	cd tests/docker && docker compose exec server-test zsh || docker compose exec server-test /bin/bash
 
 test-visual: test-docker-up ## [MANUAL] Interactive visual test - apply playbook and start shell (WSL)
 	@printf '$(BLUE)╔════════════════════════════════════════════════════════╗$(NC)\n'
@@ -146,14 +159,23 @@ test-server: test-docker-up ## [PLAYBOOK] Apply server playbook in container
 	@printf '$(BLUE)Testing server playbooks...$(NC)\n'
 	cd tests/docker && docker compose exec -T server-test ansible-playbook playbooks/servers/shell.yml -i tests/inventories/ubuntu.yml
 
-test-idempotency: test-docker-up ## [VALIDATION] Verify playbook runs don't change on 2nd run
-	@printf '$(BLUE)Testing idempotency...$(NC)\n'
+test-idempotency-wsl: test-docker-up ## [VALIDATION] WSL playbook idempotency test
+	@printf '$(BLUE)Testing WSL playbook idempotency...$(NC)\n'
 	@printf '$(YELLOW)Note: Runs playbook twice, checks for changes on 2nd run$(NC)\n'
 	cd tests/docker && docker compose exec -T wsl-test /ansible/tests/scripts/test-idempotency.sh playbooks/wsl/setup.yml tests/inventories/wsl.yml
 
-test-shell-validation: test-docker-up ## [VALIDATION] Check shell config (startup time, tools installed)
-	@printf '$(BLUE)Validating shell configuration...$(NC)\n'
-	cd tests/docker && docker compose exec -T ubuntu-test /ansible/tests/scripts/validate-shell.sh
+test-idempotency-server: test-docker-up ## [VALIDATION] Server playbook idempotency test
+	@printf '$(BLUE)Testing server playbook idempotency...$(NC)\n'
+	@printf '$(YELLOW)Note: Runs playbook twice, checks for changes on 2nd run$(NC)\n'
+	cd tests/docker && docker compose exec -T server-test /ansible/tests/scripts/test-idempotency.sh playbooks/servers/shell.yml tests/inventories/ubuntu.yml
+
+test-validation-wsl: test-docker-up ## [VALIDATION] Validate WSL shell configuration
+	@printf '$(BLUE)Validating WSL shell configuration...$(NC)\n'
+	cd tests/docker && docker compose exec -T wsl-test /ansible/tests/scripts/validate-shell.sh
+
+test-validation-server: test-docker-up ## [VALIDATION] Validate server shell configuration
+	@printf '$(BLUE)Validating server shell configuration...$(NC)\n'
+	cd tests/docker && docker compose exec -T server-test /ansible/tests/scripts/validate-shell.sh
 
 ## ═══════════════════════════════════════════════════════════
 ## Code Quality

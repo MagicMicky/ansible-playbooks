@@ -69,12 +69,23 @@
     dest: "{{ ansible_env.HOME }}/.config/bat/themes/Catppuccin Mocha.tmTheme"
     mode: '0644'
   register: bat_theme_download
-  failed_when: false  # Don't fail if directory doesn't exist (bat not installed yet)
+  when: not ansible_check_mode  # Skip in check mode (directory doesn't actually exist yet)
+  # Note: Directory created above (lines 14-30), so this should succeed in apply mode
+  # Real errors (network, permissions) will now fail properly
 
-- name: Build bat cache (only if theme was downloaded/updated)
+- name: Check if bat is installed
+  command: which bat
+  register: bat_installed
+  changed_when: false
+  failed_when: false
+
+- name: Build bat cache (only if bat is installed and theme was downloaded)
   command: bat cache --build
-  when: bat_theme_download.changed and not bat_theme_download.failed
-  failed_when: false  # Don't fail if bat is not installed yet
+  when:
+    - not ansible_check_mode
+    - bat_installed.rc == 0
+    - bat_theme_download.changed | default(false)
+  changed_when: true
 
 - name: Generate shell theme configuration
   template:
@@ -122,19 +133,20 @@
     src: "{{ ansible_env.HOME }}/.zshrc"
     dest: "{{ ansible_env.HOME }}/.zshrc.backup-{{ ansible_date_time.epoch }}"
     remote_src: yes
+    mode: preserve
   when:
     - existing_zshrc.stat.exists
     - not existing_zshrc.stat.islnk  # Only backup if it's NOT already a symlink
   register: backup_result
-  failed_when: false  # Best effort - don't fail if backup can't be created
+  # Fail if backup fails - we don't want to overwrite user data without backup
+  failed_when: backup_result.failed | default(false)
 
-- name: Warn if backup failed
+- name: Show backup location
   debug:
-    msg: "WARNING: Could not backup existing .zshrc. Proceeding anyway."
+    msg: "Existing .zshrc backed up to {{ ansible_env.HOME }}/.zshrc.backup-{{ ansible_date_time.epoch }}"
   when:
-    - existing_zshrc.stat.exists
     - backup_result is defined
-    - backup_result.failed | default(false)
+    - backup_result.changed | default(false)
 
 - name: Link new .zshrc
   file:
