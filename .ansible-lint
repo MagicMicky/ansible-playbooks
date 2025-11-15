@@ -27,6 +27,10 @@ exclude_paths:
 # Enable offline mode (don't check for role updates)
 offline: false
 
+# Specify CI-specific requirements file for ansible-lint
+# This prevents it from trying to install private work-tasks role
+requirements_file: requirements-ci.yml
+
 # Treat these as errors (fail the build)
 # All rules not in warn_list or skip_list will fail
 # This includes:
