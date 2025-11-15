@@ -30,7 +30,7 @@
         machine_profile: personal
         dotfiles_repo_url: "{{ dotfiles_repo }}"
         dotfiles_branch: "{{ dotfiles_repo_version }}"
-        dotfiles_dest: "{{ dotfiles_repo_local_destination }}"
+        dotfiles_dest: "{{ dotfiles_repo_local_destination | default(ansible_env.HOME ~ '/dotfiles') }}"
       tags: ['shell', 'dotfiles']
 
     # macOS system preferences and fonts
