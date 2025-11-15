@@ -29,12 +29,12 @@ all:
 
     # Feature toggles for CI testing
     # Disable GUI/system modifications in CI
-    configure_dotfiles: yes
-    configure_vim: no  # Skip vim setup in CI
-    configure_sublime: no  # Skip Sublime Text in CI
-    configure_iterm: no  # Skip iTerm2 in CI
-    configure_osx: no  # Skip macOS system preferences in CI (requires sudo)
-    configure_work: no  # Personal machine profile
+    configure_dotfiles: true
+    configure_vim: false  # Skip vim setup in CI
+    configure_sublime: false  # Skip Sublime Text in CI
+    configure_iterm: false  # Skip iTerm2 in CI
+    configure_osx: false  # Skip macOS system preferences in CI (requires sudo)
+    configure_work: false  # Personal machine profile
 
     # Homebrew configuration
     # Install essential packages only for faster CI
