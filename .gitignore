@@ -14,6 +14,8 @@ __pycache__/
 # Testing artifacts
 .pytest_cache/
 .ansible_cache/
+tests/test-results/*.json
+!tests/test-results/.gitkeep
 
 # Editor/IDE files
 .vscode/
