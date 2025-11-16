@@ -124,6 +124,10 @@ run_test_in_container "wsl-test" \
     "WSL Config Content" \
     "bash tests/scripts/validate-config-content.sh"
 
+run_test_in_container "wsl-test" \
+    "WSL Performance Tracking" \
+    "bash tests/scripts/track-performance.sh --check-only"
+
 # ============================================================================
 # Test Suite 3: Server Playbook (in server-test container)
 # ============================================================================
@@ -164,6 +168,10 @@ run_test_in_container "server-test" \
     "Server Config Content" \
     "bash tests/scripts/validate-config-content.sh"
 
+run_test_in_container "server-test" \
+    "Server Performance Tracking" \
+    "bash tests/scripts/track-performance.sh --check-only"
+
 # ============================================================================
 # Test Summary
 # ============================================================================
@@ -184,6 +192,7 @@ if [ $FAILED_TESTS -eq 0 ]; then
     echo -e "${BLUE}Idempotency: ✓ Both playbooks tested for idempotency${NC}"
     echo -e "${BLUE}Security: ✓ Security validation passed for both environments${NC}"
     echo -e "${BLUE}Versions: ✓ Tool versions verified${NC}"
+    echo -e "${BLUE}Performance: ✓ Shell startup time tracked${NC}"
     exit 0
 else
     echo -e "${RED}❌ SOME TESTS FAILED${NC}"

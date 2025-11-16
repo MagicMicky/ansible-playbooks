@@ -42,7 +42,7 @@ install: deps ## Install pre-commit hooks and dependencies
 ## Testing Commands
 ## ═══════════════════════════════════════════════════════════
 
-test: deps test-syntax test-docker-build test-docker-up ## [MAIN] Run complete test suite in isolated containers (~8-12min)
+test: deps test-syntax test-docker-build test-docker-up ## [MAIN] Run complete test suite in isolated containers (~10-15min)
 	@printf '$(BLUE)╔════════════════════════════════════════════════════════╗$(NC)\n'
 	@printf '$(BLUE)║  Running Test Suite                                   ║$(NC)\n'
 	@printf '$(BLUE)║  - WSL tests in wsl-test container                    ║$(NC)\n'
@@ -50,6 +50,18 @@ test: deps test-syntax test-docker-build test-docker-up ## [MAIN] Run complete t
 	@printf '$(BLUE)║  - Full idempotency coverage                          ║$(NC)\n'
 	@printf '$(BLUE)╚════════════════════════════════════════════════════════╝$(NC)\n'
 	@./tests/scripts/run-all-tests.sh
+	@$(MAKE) test-docker-down
+
+test-ci: test-docker-build test-docker-up ## [CI] Run tests in parallel (simulates CI matrix behavior)
+	@printf '$(BLUE)╔════════════════════════════════════════════════════════╗$(NC)\n'
+	@printf '$(BLUE)║  Running CI-Style Parallel Tests                      ║$(NC)\n'
+	@printf '$(BLUE)╚════════════════════════════════════════════════════════╝$(NC)\n'
+	@printf '$(YELLOW)Running WSL and Server tests concurrently...$(NC)\n'
+	@cd tests/docker && \
+		( docker compose exec -T wsl-test bash -c "cd /ansible && ansible-playbook playbooks/wsl/setup.yml -i tests/inventories/wsl.yml && bash tests/scripts/validate-shell.sh" ) & \
+		( docker compose exec -T server-test bash -c "cd /ansible && ansible-playbook playbooks/servers/shell.yml -i tests/inventories/ubuntu.yml && bash tests/scripts/validate-shell.sh" ) & \
+		wait
+	@printf '$(GREEN)✅ CI-style parallel tests complete$(NC)\n'
 	@$(MAKE) test-docker-down
 
 test-syntax: ## [FAST] Syntax check all playbooks (no Docker needed ~10s)
@@ -192,6 +204,18 @@ test-config-content-wsl: test-docker-up ## [VALIDATION] Validate WSL configurati
 test-config-content-server: test-docker-up ## [VALIDATION] Validate server configuration content
 	@printf '$(BLUE)Validating server configuration content...$(NC)\n'
 	cd tests/docker && docker compose exec -T server-test /ansible/tests/scripts/validate-config-content.sh
+
+test-performance-wsl: test-docker-up ## [VALIDATION] Track WSL shell startup performance
+	@printf '$(BLUE)Tracking WSL shell startup performance...$(NC)\n'
+	cd tests/docker && docker compose exec -T wsl-test /ansible/tests/scripts/track-performance.sh
+
+test-performance-server: test-docker-up ## [VALIDATION] Track server shell startup performance
+	@printf '$(BLUE)Tracking server shell startup performance...$(NC)\n'
+	cd tests/docker && docker compose exec -T server-test /ansible/tests/scripts/track-performance.sh
+
+test-performance-history: ## [INFO] Show shell startup performance history
+	@printf '$(BLUE)Performance history:$(NC)\n'
+	@./tests/scripts/track-performance.sh --show-history
 
 ## ═══════════════════════════════════════════════════════════
 ## Code Quality
