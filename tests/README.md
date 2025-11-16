@@ -1,6 +1,6 @@
 # Testing Guide
 
-Comprehensive testing documentation for Ansible playbooks repository.
+Comprehensive testing infrastructure for Ansible playbooks with **full isolation**, **security validation**, and **performance tracking**.
 
 ---
 
@@ -8,10 +8,12 @@ Comprehensive testing documentation for Ansible playbooks repository.
 
 - [Overview](#overview)
 - [Quick Start](#quick-start)
+- [Test Architecture](#test-architecture)
 - [Docker Testing](#docker-testing)
 - [Test Scripts](#test-scripts)
 - [Mac Testing](#mac-testing)
 - [CI/CD Integration](#cicd-integration)
+- [Performance Tracking](#performance-tracking)
 - [Makefile Commands](#makefile-commands)
 - [Troubleshooting](#troubleshooting)
 
@@ -22,23 +24,23 @@ Comprehensive testing documentation for Ansible playbooks repository.
 This testing infrastructure provides safe, reproducible testing of Ansible playbooks before deployment to real machines.
 
 **Key Features**:
-- Docker-based testing for Linux playbooks (WSL, servers)
-- Automated validation scripts for syntax, idempotency, and shell configuration
-- GitHub Actions CI/CD for automated testing on every commit
-- Manual checklist for macOS playbooks
-- Pre-commit hooks for code quality
+- **Container Isolation**: Each playbook runs in dedicated Docker container (no state pollution)
+- **Comprehensive Validation**: 19 tests covering security, performance, profile isolation
+- **macOS CI Testing**: GitHub Actions macOS runners for native Mac playbook testing
+- **Performance Tracking**: Automatic shell startup time measurement with regression detection
+- **Test Helper Library**: Reusable assertions reduce boilerplate by ~30%
+- **GitHub Actions CI/CD**: Automated testing on every push/PR
 
-**What Can Be Tested in Docker**:
-- ✅ WSL playbook (`playbooks/wsl/setup.yml`)
-- ✅ Server playbooks (`playbooks/servers/*.yml`)
-- ✅ common-shell role (Linux parts)
-- ✅ Syntax validation for all playbooks
-- ✅ Idempotency testing
+**What Is Tested**:
+- ✅ WSL playbook (`playbooks/wsl/setup.yml`) - Docker + CI
+- ✅ Server playbooks (`playbooks/servers/*.yml`) - Docker + CI
+- ✅ Mac personal playbook (`playbooks/mac/personal.yml`) - GitHub Actions macOS runner
+- ✅ Security validation (permissions, secrets detection)
+- ✅ Profile isolation (no cross-contamination)
+- ✅ Configuration content validation
+- ✅ Performance regression detection
 
-**What Requires Real Mac**:
-- ❌ Mac playbooks (`playbooks/mac/*.yml`) - macOS-specific APIs
-- ❌ Homebrew installations
-- ❌ macOS system preferences
+**Test Count**: 19 tests total (WSL: 9, Server: 9, Syntax: 1)
 
 ---
 
@@ -90,21 +92,69 @@ The easiest way to run tests is using the provided Makefile:
 make help
 
 # Recommended: Full test suite (cleans up automatically)
-make test
+make test                     # All 19 tests (~10-15 min)
 
 # Quick syntax check (no Docker needed)
-make test-syntax
+make test-syntax              # Fast (~10s)
 
 # Individual tests (containers stay running for debugging)
 make test-wsl                 # Apply WSL playbook in container
 make test-server              # Apply server playbook
-make test-idempotency         # Verify idempotency
-make test-shell-validation    # Check shell config
+make test-idempotency-wsl     # Verify WSL idempotency
+make test-idempotency-server  # Verify server idempotency
+make test-validation-wsl      # Check WSL shell config
+make test-validation-server   # Check server shell config
+make test-performance-wsl     # Track WSL startup time
+make test-performance-server  # Track server startup time
+make test-profile-isolation-wsl    # Verify WSL profile isolation
+make test-config-content-wsl       # Validate WSL config content
 
 # Debugging
-make test-docker-shell        # Open bash inside container
+make test-shell               # Open zsh in WSL container
+make test-shell-server        # Open zsh in server container
+make test-visual              # Apply playbook + open shell (WSL)
 make clean                    # Stop and remove all containers
 ```
+
+## Test Architecture
+
+### Container Isolation
+
+Each playbook runs in its own Docker container to **prevent state pollution**:
+
+```
+wsl-test container        server-test container
+┌─────────────────┐      ┌─────────────────┐
+│ WSL Playbook    │      │ Server Playbook │
+│ + 8 validations │      │ + 8 validations │
+└─────────────────┘      └─────────────────┘
+         │                        │
+         └────────┬───────────────┘
+                  │
+          ┌───────▼───────┐
+          │ Syntax Check  │
+          │   (1 test)    │
+          └───────────────┘
+```
+
+### Test Suite (19 Tests)
+
+**Phase 1: Syntax Validation** (1 test)
+- YAML syntax check for all playbooks
+
+**Phase 2: WSL Playbook Tests** (9 tests)
+1. Check mode execution
+2. Apply mode execution
+3. Shell validation (tools, startup)
+4. Idempotency verification
+5. Security validation
+6. Tool version verification
+7. Profile isolation
+8. Configuration content
+9. **Performance tracking**
+
+**Phase 3: Server Playbook Tests** (9 tests)
+Same as WSL but for server environment
 
 ### Manual Testing Workflow
 
@@ -780,6 +830,48 @@ git push
 
 ---
 
+## Performance Tracking
+
+The testing infrastructure includes automatic shell startup performance tracking with regression detection.
+
+### Using Performance Tracking
+
+```bash
+# Track performance in containers (saves to history)
+make test-performance-wsl
+make test-performance-server
+
+# View performance history
+make test-performance-history
+
+# Check performance without saving
+cd tests/docker
+docker compose exec wsl-test /ansible/tests/scripts/track-performance.sh --check-only
+```
+
+### Performance Metrics
+
+- **Measurement**: 5 runs, average
+- **Container baseline**: <200ms
+- **Native baseline**: <100ms
+- **Regression threshold**: >20% over baseline triggers failure
+- **History format**: JSON file in `tests/test-results/perf-history.json`
+
+### Investigating Regressions
+
+```bash
+# Inside container after playbook applied
+zsh -i -c 'time source ~/.zshrc'  # Measure startup
+zinit times                        # Show plugin load times
+```
+
+Common causes:
+- Heavy plugins added
+- Network operations in init
+- Compilation issues with zinit
+
+---
+
 ## Performance Benchmarks
 
 ### Expected Test Times
@@ -791,7 +883,7 @@ git push
 | WSL playbook test | 1-3min | Includes tool installations |
 | Server playbook test | 1-2min | Minimal profile, faster |
 | Idempotency test | 2-4min | Runs playbook twice |
-| Complete suite | 5-8min | All tests sequentially |
+| Complete suite | 10-15min | All 19 tests sequentially |
 
 ### Shell Startup Targets
 
@@ -813,8 +905,11 @@ git push
 
 ---
 
-**Testing Infrastructure Status**: ✅ Complete (Phase 8-9)
+**Testing Infrastructure Status**: ✅ Complete (Phase 3 in progress)
 
-**Last Updated**: 2025-01-13
+**Test Count**: 19 tests (WSL: 9, Server: 9, Syntax: 1)
+
+**Last Updated**: 2025-11-16
 
 For deployment procedures, see `STATUS.md` and main `README.md`.
+For improvement roadmap, see `TESTING_IMPROVEMENTS.md`.
