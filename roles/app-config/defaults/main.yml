@@ -3,7 +3,7 @@
 
 # Sublime Text configuration
 configure_sublime: true
-dotfiles_repo_local_destination: "{{ ansible_env.HOME }}/dotfiles"
+dotfiles_repo_local_destination: "{{ ansible_env.HOME }}/Development/dotfiles"
 
 # iTerm2 configuration
 configure_iterm: true
