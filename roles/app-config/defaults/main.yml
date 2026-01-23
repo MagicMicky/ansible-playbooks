@@ -10,7 +10,7 @@ configure_iterm: true
 
 # Vim configuration
 configure_vim: true
-vim_script: "~/.to_be_installed/vim/install.sh"
+vim_script: "{{ dotfiles_repo_local_destination }}/vim/install.sh"
 
 # Git configuration
 configure_git: true

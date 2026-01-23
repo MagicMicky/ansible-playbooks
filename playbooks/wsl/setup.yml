@@ -53,7 +53,7 @@
       vars:
         configure_sublime: false
         configure_iterm: false
-        configure_vim: false
+        configure_vim: true
         configure_git: true
         configure_claude: true
       tags: ['apps', 'config']
