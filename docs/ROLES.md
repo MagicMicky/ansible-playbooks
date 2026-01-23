@@ -21,7 +21,7 @@ The consolidated repository provides 4 shared roles that implement the DRY princ
 |------|---------|---------|
 | `common-shell` | Modern shell configuration (zinit, starship) | All platforms |
 | `mac-system` | macOS system preferences and fonts | Mac playbooks |
-| `app-config` | Application configurations (Sublime, iTerm, Vim) | Mac playbooks |
+| `app-config` | Application configs (git, claude; legacy disabled) | All platforms |
 | `server-base` | Base server setup (packages, Docker, users) | Server playbooks |
 
 All roles are idempotent and can be run multiple times safely.
@@ -245,24 +245,29 @@ roles:
 
 ### Purpose
 
-Configures application settings by linking to dotfiles:
-- Sublime Text (keybindings, preferences)
-- iTerm2 (terminal preferences)
-- Vim (plugins and themes)
+Configures application settings by linking config files from dotfiles:
+- **Git** - Links `~/.gitconfig`
+- **Claude Code** - Links settings and statusline script
+
+**Legacy (disabled)**: Sublime Text, iTerm2, Vim - see [Issue #3](https://github.com/MagicMicky/ansible-playbooks/issues/3)
 
 ### Variables
 
 ```yaml
-# Application toggles
-configure_sublime: true
-configure_iterm: true
-configure_vim: true
+# Active configurations
+configure_git: true      # Links ~/.gitconfig
+configure_claude: true   # Links ~/.claude/settings.json + statusline.sh
+
+# Legacy configurations (disabled by default - need review)
+configure_sublime: false  # macOS only
+configure_iterm: false    # macOS only
+configure_vim: false
 
 # Dotfiles location
-dotfiles_repo_local_destination: "{{ ansible_env.HOME }}/dotfiles"
+dotfiles_repo_local_destination: "{{ ansible_env.HOME }}/Development/dotfiles"
 
-# Vim script (optional)
-vim_script: ~/.to_be_installed/vim/install.sh
+# Vim script (only used if configure_vim: true)
+vim_script: "{{ dotfiles_repo_local_destination }}/vim/install.sh"
 ```
 
 ### Usage Example
@@ -275,24 +280,34 @@ roles:
 
 ### Tasks
 
-**sublime.yml**:
+**git.yml** (active):
+- Links `~/.gitconfig` from dotfiles
+
+**claude.yml** (active):
+- Ensures `~/.claude` directory exists
+- Links `settings.json` from dotfiles
+- Links `statusline.sh` from dotfiles
+
+**sublime.yml** (disabled):
 - Ensure Sublime Text User directory exists
 - Link keymap from dotfiles
 - Link preferences from dotfiles
 
-**iterm.yml**:
+**iterm.yml** (disabled):
 - Link iTerm2 preferences plist
 
-**vim.yml**:
+**vim.yml** (disabled):
 - Run vim plugin installation script
 
 ### Tags
 
 - `apps` - All application configs
 - `config` - All configurations
-- `sublime` - Sublime Text only
-- `iterm` - iTerm2 only
-- `vim` - Vim only
+- `git` - Git config only
+- `claude` - Claude Code only
+- `sublime` - Sublime Text only (disabled)
+- `iterm` - iTerm2 only (disabled)
+- `vim` - Vim only (disabled)
 
 ---
 
