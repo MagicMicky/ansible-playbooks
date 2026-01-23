@@ -468,7 +468,7 @@ tests/
   - `configure_vim: no` (vim setup skipped)
 - Essential shell testing only
 - Uses `dotfiles-test` directory (same as Ubuntu tests)
-- Branch: `main`
+- Branch: `master`
 
 **GitHub Actions Jobs** (`.github/workflows/test-playbooks.yml`):
 

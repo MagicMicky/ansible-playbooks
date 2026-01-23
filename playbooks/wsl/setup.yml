@@ -9,9 +9,10 @@
 
   vars:
     machine_profile: wsl
-    # dotfiles_dest can be overridden in inventory for testing
-    # Use inventory value if set, otherwise use default local path
-    # Don't define if already set in inventory (avoid recursion)
+    # Dotfiles configuration
+    dotfiles_repo_url: "https://github.com/MagicMicky/dotfiles.git"
+    dotfiles_branch: master
+    # dotfiles_dest defaults to ~/Development/dotfiles (from role defaults)
 
     # Modern tools installation
     install_starship: true

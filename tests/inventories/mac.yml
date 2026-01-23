@@ -21,7 +21,7 @@ all:
     # dotfiles_repo_local_destination is the DESTINATION path
     dotfiles_repo: "https://github.com/MagicMicky/dotfiles.git"  # Source repo URL
     dotfiles_repo_local_destination: "{{ ansible_env.HOME }}/dotfiles-test"  # Destination path
-    dotfiles_repo_version: main
+    dotfiles_repo_version: master
     dotfiles_repo_accept_hostkey: yes  # Accept SSH host key
 
     # Downloads directory

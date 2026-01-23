@@ -109,10 +109,20 @@
 
 - name: Check if dotfiles repository exists
   stat:
-    path: "{{ dotfiles_dest }}"
-  register: dotfiles_dir
+    path: "{{ dotfiles_dest }}/.git"
+  register: dotfiles_git_dir
 
-- name: Clone dotfiles repository
+- name: Clone dotfiles repository (if not exists)
+  git:
+    repo: "{{ dotfiles_repo_url }}"
+    dest: "{{ dotfiles_dest }}"
+    version: "{{ dotfiles_branch }}"
+  when:
+    - dotfiles_repo_url is defined
+    - dotfiles_repo_url != ""
+    - not dotfiles_git_dir.stat.exists
+
+- name: Update dotfiles repository (if exists)
   git:
     repo: "{{ dotfiles_repo_url }}"
     dest: "{{ dotfiles_dest }}"
@@ -121,7 +131,7 @@
   when:
     - dotfiles_repo_url is defined
     - dotfiles_repo_url != ""
-    - not dotfiles_dir.stat.exists
+    - dotfiles_git_dir.stat.exists
 
 - name: Check if existing .zshrc exists
   stat:

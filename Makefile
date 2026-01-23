@@ -267,9 +267,13 @@ mac-work: deps ## [DEPLOY] Apply work Mac playbook
 	@printf '$(YELLOW)⚠️  This will modify your system!$(NC)\n'
 	ansible-playbook playbooks/mac/work.yml -i inventories/localhost -K
 
-wsl-setup: deps ## [DEPLOY] Apply WSL setup playbook
+wsl-check: deps ## [DEPLOY] Apply WSL setup playbook
 	@printf '$(BLUE)Running WSL setup playbook...$(NC)\n'
-	ansible-playbook playbooks/wsl/setup.yml -i inventories/localhost
+	ansible-playbook playbooks/wsl/setup.yml -i inventories/localhost -K --check
+
+wsl: deps ## [DEPLOY] Apply WSL setup playbook
+	@printf '$(BLUE)Running WSL setup playbook...$(NC)\n'
+	ansible-playbook playbooks/wsl/setup.yml -i inventories/localhost -K
 
 server-base: deps ## [DEPLOY] Apply server base playbook (requires INVENTORY=path)
 	@printf '$(BLUE)Running server base playbook...$(NC)\n'
@@ -279,7 +283,7 @@ server-base: deps ## [DEPLOY] Apply server base playbook (requires INVENTORY=pat
 server-shell: deps ## [DEPLOY] Apply server shell playbook (requires INVENTORY=path)
 	@printf '$(BLUE)Running server shell playbook...$(NC)\n'
 	@printf '$(RED)Usage: make server-shell INVENTORY=inventories/servers.yml$(NC)\n'
-	ansible-playbook playbooks/servers/shell.yml -i ${INVENTORY}
+	ansible-playbook playbooks/servers/shell.yml -i ${INVENTORY} -K
 
 ## ═══════════════════════════════════════════════════════════
 ## Documentation & Info

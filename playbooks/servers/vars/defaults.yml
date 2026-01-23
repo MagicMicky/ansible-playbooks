@@ -8,7 +8,7 @@ machine_profile: server
 # Dotfiles configuration
 dotfiles_dest: "/opt/dotfiles"
 dotfiles_repo_url: "https://github.com/MagicMicky/dotfiles.git"
-dotfiles_branch: main
+dotfiles_branch: master
 
 # Minimal tools for servers (performance-focused)
 install_starship: true
