@@ -1,0 +1,11 @@
+---
+# Git configuration tasks
+
+- name: Link gitconfig
+  file:
+    src: "{{ dotfiles_repo_local_destination }}/git/gitconfig"
+    dest: "~/.gitconfig"
+    state: link
+    force: yes
+  become: no
+  tags: ['git']

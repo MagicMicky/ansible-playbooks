@@ -1,0 +1,19 @@
+---
+# Claude Code configuration tasks
+
+- name: Ensure ~/.claude directory exists
+  file:
+    path: "~/.claude"
+    state: directory
+    mode: '0755'
+  become: no
+  tags: ['claude']
+
+- name: Link Claude Code settings
+  file:
+    src: "{{ dotfiles_repo_local_destination }}/claude/settings.json"
+    dest: "~/.claude/settings.json"
+    state: link
+    force: yes
+  become: no
+  tags: ['claude']

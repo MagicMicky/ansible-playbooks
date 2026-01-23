@@ -20,3 +20,13 @@
   import_tasks: vim.yml
   when: configure_vim | default(true)
   tags: ['vim']
+
+- name: Include Git configuration
+  import_tasks: git.yml
+  when: configure_git | default(true)
+  tags: ['git']
+
+- name: Include Claude Code configuration
+  import_tasks: claude.yml
+  when: configure_claude | default(true)
+  tags: ['claude']
