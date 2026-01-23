@@ -1,19 +1,27 @@
 ---
 # Default variables for app-config role
 
-# Sublime Text configuration
-configure_sublime: true
 dotfiles_repo_local_destination: "{{ ansible_env.HOME }}/Development/dotfiles"
-
-# iTerm2 configuration
-configure_iterm: true
-
-# Vim configuration
-configure_vim: true
-vim_script: "{{ dotfiles_repo_local_destination }}/vim/install.sh"
 
 # Git configuration
 configure_git: true
 
 # Claude Code configuration
 configure_claude: true
+
+# -----------------------------------------------------------------------------
+# LEGACY CONFIGS - DISABLED
+# TODO: These configs are outdated (unchanged for years in dotfiles repo).
+#       Need to review and update for compatibility with modern shell setup.
+#       See: dotfiles/vim/, dotfiles/macspecial/ for current state.
+# -----------------------------------------------------------------------------
+
+# Sublime Text configuration (macOS only)
+configure_sublime: false
+
+# iTerm2 configuration (macOS only)
+configure_iterm: false
+
+# Vim configuration
+configure_vim: false
+vim_script: "{{ dotfiles_repo_local_destination }}/vim/install.sh"
