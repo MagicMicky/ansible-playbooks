@@ -20,4 +20,4 @@ all:
     # Clone from public GitHub repo (simulates real deployment)
     dotfiles_dest: "{{ ansible_env.HOME }}/dotfiles-test"
     dotfiles_repo_url: "https://github.com/MagicMicky/dotfiles.git"
-    dotfiles_branch: main
+    dotfiles_branch: master

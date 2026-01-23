@@ -9,7 +9,7 @@ downloads: ~/.ansible-downloads/
 # Set in your inventory file or use defaults
 dotfiles_repo: https://github.com/MagicMicky/dotfiles.git
 dotfiles_repo_accept_hostkey: true
-dotfiles_repo_version: main
+dotfiles_repo_version: master
 # dotfiles_repo_local_destination defaults to ~/dotfiles (set in inventory to override)
 
 # Homebrew packages

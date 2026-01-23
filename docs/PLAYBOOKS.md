@@ -125,7 +125,7 @@ exec zsh
 
 **Variables**:
 - `machine_profile: wsl` - Enables WSL-specific configs
-- `dotfiles_branch: main` - Branch to use
+- `dotfiles_branch: master` - Branch to use
 
 **Expected Result**:
 - Blue λ prompt

@@ -54,7 +54,7 @@ server_type: generic
 # Dotfiles configuration
 dotfiles_repo: "{{ ansible_env.HOME }}/dotfiles"
 dotfiles_repo_url: git@github.com:YourUsername/dotfiles.git
-dotfiles_branch: main
+dotfiles_branch: master
 
 # Tool installation (optional, defaults shown)
 install_starship: true
@@ -134,7 +134,7 @@ roles:
   - role: common-shell
     vars:
       machine_profile: personal
-      dotfiles_branch: main
+      dotfiles_branch: master
     tags: ['shell']
 ```
 
