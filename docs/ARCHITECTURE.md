@@ -53,6 +53,45 @@ terminal_improvements/
 └── infra/                 # Infrastructure (separate concern)
 ```
 
+## Playbook → Role Call Graph
+
+Which playbooks call which roles:
+
+```
+mac/personal.yml
+├── geerlingguy.mac.homebrew    # Homebrew packages & casks
+├── common-shell                 # Shell setup (zinit, starship, tools)
+├── mac-system                   # macOS preferences & fonts
+└── app-config                   # Git + Claude configs
+
+mac/work.yml
+├── geerlingguy.mac.homebrew    # Homebrew packages & casks
+├── common-shell                 # Shell setup (pro profile)
+├── mac-system                   # macOS preferences & fonts
+├── app-config                   # Git + Claude configs
+└── work-tasks                   # Work-specific (from private repo)
+
+wsl/setup.yml
+├── common-shell                 # Shell setup (wsl profile)
+└── app-config                   # Git + Claude configs
+
+servers/base.yml
+└── server-base                  # Base packages, Docker, users
+
+servers/shell.yml
+└── common-shell                 # Shell setup (server profile, minimal)
+```
+
+**Role summary**:
+| Role | Platform | Purpose |
+|------|----------|---------|
+| `common-shell` | All | Shell config (zinit, starship, modern tools) |
+| `app-config` | All | Application configs (git, claude; legacy disabled) |
+| `mac-system` | macOS | System preferences, fonts |
+| `server-base` | Linux | Base packages, Docker, users |
+| `geerlingguy.mac.homebrew` | macOS | Package management (external) |
+| `work-tasks` | macOS | Work-specific tasks (private repo) |
+
 ## Shell Configuration Flow
 
 ### Deployment (Ansible)
