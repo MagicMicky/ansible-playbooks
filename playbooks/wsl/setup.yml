@@ -49,6 +49,15 @@
     - role: common-shell
       tags: ['shell', 'dotfiles']
 
+    - role: app-config
+      vars:
+        configure_sublime: false
+        configure_iterm: false
+        configure_vim: true
+        configure_git: true
+        configure_claude: true
+      tags: ['apps', 'config']
+
   post_tasks:
     - name: Display completion message
       debug:
