@@ -134,7 +134,7 @@ roles:
   - role: common-shell
     vars:
       machine_profile: personal
-      dotfiles_branch: modern-shell-2025
+      dotfiles_branch: main
     tags: ['shell']
 ```
 
