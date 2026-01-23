@@ -17,3 +17,12 @@
     force: yes
   become: no
   tags: ['claude']
+
+- name: Link Claude Code statusline script
+  file:
+    src: "{{ dotfiles_repo_local_destination }}/claude/statusline.sh"
+    dest: "~/.claude/statusline.sh"
+    state: link
+    force: yes
+  become: no
+  tags: ['claude']
