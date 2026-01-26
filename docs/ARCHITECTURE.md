@@ -9,6 +9,15 @@ This document describes the architecture of the modern shell setup across all ma
 - **Multiple playbooks** use the same role with different variables
 - **Zero duplication** of shell setup logic
 
+### Coding Standards
+All playbooks and tasks follow these conventions:
+- **FQCN**: Fully Qualified Collection Names (e.g., `ansible.builtin.debug`)
+- **Booleans**: Use `true`/`false` (not `yes`/`no`)
+- **Variables**: Use `vars_files:` pointing to `vars/*.yml` (not inline `vars:`)
+- **Defaults**: Use `| default(false)` for conditional guards
+- **Loop syntax**: Use `loop:` (not `with_items:`)
+- **Organization**: Platform-specific tasks live within their playbook folder
+
 ### Machine Profile System
 Configuration adapts automatically based on `machine_profile`:
 
@@ -39,8 +48,12 @@ terminal_improvements/
 │   │   └── common-shell/  # Universal shell setup role
 │   ├── playbooks/
 │   │   ├── mac/           # macOS playbooks
+│   │   │   ├── tasks/     # Mac-specific tasks
+│   │   │   └── vars/      # Mac variables
 │   │   ├── wsl/           # WSL playbooks
+│   │   │   └── vars/      # WSL variables
 │   │   └── servers/       # Server playbooks
+│   │       └── vars/      # Server variables
 │   └── tests/             # Docker-based testing
 │
 ├── dotfiles/              # Shell configurations (public)

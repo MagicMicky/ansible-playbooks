@@ -1,16 +1,28 @@
 ---
 # Personal Mac configuration variables
-# Cleaned up - removed unused/broken references
+# Base configuration that work.yml extends
+
+# Machine profile for shell configuration
+machine_profile: laptop
 
 # Downloads directory for Ansible temporary files
 downloads: ~/.ansible-downloads/
 
 # Dotfiles configuration
-# Set in your inventory file or use defaults
 dotfiles_repo: https://github.com/MagicMicky/dotfiles.git
 dotfiles_repo_accept_hostkey: true
 dotfiles_repo_version: master
 # dotfiles_repo_local_destination defaults to ~/dotfiles (set in inventory to override)
+
+# Modern tools installation
+# Mac gets the full set of modern tools
+install_starship: true
+install_fzf: true
+install_zoxide: true
+install_bat: true
+install_eza: true
+install_fd: true
+install_ripgrep: true
 
 # Homebrew packages
 homebrew_installed_packages:

@@ -2,8 +2,11 @@
 # Work Mac configuration variables
 # Extends personal configuration with work-specific settings
 
-# Inherit most settings from personal
-configure_work: yes  # Enable work-specific tasks
+# Machine profile override for work
+machine_profile: pro
+
+# Enable work-specific tasks
+configure_work: true
 
 # Work-specific packages (non-sensitive)
 homebrew_installed_packages:

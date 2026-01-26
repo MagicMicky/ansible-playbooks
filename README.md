@@ -57,23 +57,22 @@ ansible-playbooks/
 │   ├── mac/
 │   │   ├── personal.yml   # Personal Mac
 │   │   ├── work.yml       # Work Mac
-│   │   └── vars/          # Variable files
+│   │   ├── vars/          # Variable files
+│   │   └── tasks/         # Mac-specific tasks
 │   ├── wsl/
-│   │   └── setup.yml      # WSL setup
+│   │   ├── setup.yml      # WSL setup
+│   │   └── vars/          # WSL variables
 │   └── servers/
 │       ├── base.yml       # Base server config
 │       ├── shell.yml      # Shell setup
 │       └── vars/          # Server variables
-│
-├── tasks/                 # Shared task files
-│   ├── mac/               # Mac-specific tasks
-│   └── common/            # Common tasks
 │
 ├── inventories/           # Inventory examples
 │   ├── localhost          # Local machine
 │   └── servers-example.yml # Server inventory template
 │
 ├── docs/                  # Documentation
+│   ├── ARCHITECTURE.md    # Architecture overview
 │   ├── PLAYBOOKS.md       # Playbook usage reference
 │   └── ROLES.md           # Role documentation
 │
@@ -287,4 +286,4 @@ MIT
 
 ---
 
-**Last Updated**: 2025-01-14
+**Last Updated**: 2026-01-26

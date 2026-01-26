@@ -434,7 +434,7 @@ enable_feature: true
 ```yaml
 ---
 - name: Do something
-  debug:
+  ansible.builtin.debug:
     msg: "Setting is {{ my_setting }}"
   when: enable_feature
 ```
@@ -463,6 +463,8 @@ enable_feature: true
 5. **Variables**: Prefix role variables to avoid conflicts
 6. **Conditionals**: Use `when:` for optional features
 7. **Testing**: Test on clean system before deploying
+8. **FQCN**: Use fully qualified collection names (e.g., `ansible.builtin.debug`)
+9. **Booleans**: Use `true`/`false` instead of `yes`/`no`
 
 ---
 
