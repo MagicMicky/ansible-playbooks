@@ -1,25 +1,18 @@
 ---
-# Server configuration variables
+# Server shell configuration variables
 # Used by servers/setup.yml playbook
+# Base system setup (packages, Docker, users) is defined in infra repo
 
 # Machine profile for shell configuration
 machine_profile: server
 
-# Base configuration toggle (set to false to skip server-base role)
-configure_server_base: true
-
-# User configuration
+# Users to configure shell for (must already exist on system)
+# Only users with shell: /bin/zsh will get shell configuration
 server_users:
   - name: magicmicky
     shell: /bin/zsh
-    groups: ['sudo', 'docker']
-    ssh_key: "REDACTED_SSH_KEY"
   - name: ansible
-    groups: ['docker']
-    ssh_key: "REDACTED_SSH_KEY"
-
-# Package configuration
-install_docker: true
+    # no shell defined = no shell config
 
 # Dotfiles configuration
 dotfiles_dest: "/opt/dotfiles"
