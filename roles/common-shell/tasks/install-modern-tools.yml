@@ -33,21 +33,25 @@
 
 - name: Ensure .local/bin directory exists
   file:
-    path: "{{ ansible_env.HOME }}/.local/bin"
+    path: "{{ target_home }}/.local/bin"
     state: directory
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
     mode: '0755'
+  become: yes
 
 - name: Check if fzf is installed
   stat:
-    path: "{{ ansible_env.HOME }}/.fzf/bin/fzf"
+    path: "{{ target_home }}/.fzf/bin/fzf"
   register: fzf_binary
 
 - name: Install fzf with shell integration (Linux)
   shell: |
-    git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
-    cd ~/.fzf && ./install --bin
-    # Symlink to .local/bin for easier PATH management
-    ln -sf ~/.fzf/bin/fzf ~/.local/bin/fzf
+    git clone --depth 1 https://github.com/junegunn/fzf.git {{ target_home }}/.fzf
+    cd {{ target_home }}/.fzf && ./install --bin
+    ln -sf {{ target_home }}/.fzf/bin/fzf {{ target_home }}/.local/bin/fzf
+  become: yes
+  become_user: "{{ target_user }}"
   when:
     - not is_macos
     - not fzf_binary.stat.exists
@@ -55,21 +59,28 @@
 
 - name: Add fzf to PATH in profile config
   blockinfile:
-    path: "{{ ansible_env.HOME }}/.zshenv"
+    path: "{{ target_home }}/.zshenv"
     create: yes
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
     marker: "# {mark} ANSIBLE MANAGED BLOCK - FZF"
     block: |
       # Add fzf to PATH
       export PATH="$HOME/.fzf/bin:$PATH"
+  become: yes
   when: not is_macos
 
 - name: Check if zoxide is installed
   stat:
-    path: "{{ ansible_env.HOME }}/.local/bin/zoxide"
+    path: "{{ target_home }}/.local/bin/zoxide"
   register: zoxide_binary
 
 - name: Install zoxide (Linux)
   shell: curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
+  become: yes
+  become_user: "{{ target_user }}"
+  environment:
+    HOME: "{{ target_home }}"
   when:
     - not is_macos
     - not zoxide_binary.stat.exists

@@ -5,7 +5,10 @@
   file:
     path: "{{ zinit_home }}"
     state: directory
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
     mode: '0755'
+  become: yes
 
 - name: Check if zinit is already installed
   stat:
@@ -18,4 +21,6 @@
     dest: "{{ zinit_home }}/zinit.git"
     version: main
     update: no
+  become: yes
+  become_user: "{{ target_user }}"
   when: not zinit_installation.stat.exists

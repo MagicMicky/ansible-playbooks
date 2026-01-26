@@ -8,11 +8,6 @@
   become: yes
   when: not is_macos  # macOS has zsh by default
 
-- name: Check current shell
-  shell: echo $SHELL
-  register: current_shell
-  changed_when: false
-
 - name: Get zsh path
   shell: which zsh
   register: zsh_path_result
@@ -20,7 +15,6 @@
 
 - name: Change default shell to zsh
   user:
-    name: "{{ ansible_user_id }}"
+    name: "{{ target_user }}"
     shell: "{{ zsh_path_result.stdout }}"
   become: yes
-  when: current_shell.stdout != zsh_path_result.stdout
