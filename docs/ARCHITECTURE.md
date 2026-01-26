@@ -88,10 +88,8 @@ wsl/setup.yml
 ├── common-shell                 # Shell setup (wsl profile)
 └── app-config                   # Git + Claude configs
 
-servers/base.yml
-└── server-base                  # Base packages, Docker, users
-
-servers/shell.yml
+servers/setup.yml
+├── server-base                  # Base packages, Docker, users (toggle: configure_server_base)
 └── common-shell                 # Shell setup (server profile, minimal)
 ```
 

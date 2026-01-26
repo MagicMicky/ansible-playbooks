@@ -29,14 +29,14 @@ ansible-playbook playbooks/wsl/setup.yml -i inventories/localhost
 cp inventories/servers-example.yml inventories/servers.yml
 vim inventories/servers.yml  # Add your servers
 
-# Deploy to all servers
-ansible-playbook playbooks/servers/base.yml -i inventories/servers.yml
+# Deploy to all servers (full setup)
+ansible-playbook playbooks/servers/setup.yml -i inventories/servers.yml
 
 # Deploy to specific group
-ansible-playbook playbooks/servers/shell.yml -i inventories/servers.yml --limit homelab
+ansible-playbook playbooks/servers/setup.yml -i inventories/servers.yml --limit homelab
 
-# Deploy to single server
-ansible-playbook playbooks/servers/shell.yml -i inventories/servers.yml --limit gaming-server
+# Deploy shell only (skip base system setup)
+ansible-playbook playbooks/servers/setup.yml -i inventories/servers.yml -e configure_server_base=false
 ```
 
 ## Inventory Structure

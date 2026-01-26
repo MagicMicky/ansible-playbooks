@@ -1,9 +1,25 @@
 ---
-# Default server variables
-# Used by server playbooks
+# Server configuration variables
+# Used by servers/setup.yml playbook
 
 # Machine profile for shell configuration
 machine_profile: server
+
+# Base configuration toggle (set to false to skip server-base role)
+configure_server_base: true
+
+# User configuration
+server_users:
+  - name: magicmicky
+    shell: /bin/zsh
+    groups: ['sudo', 'docker']
+    ssh_key: "REDACTED_SSH_KEY"
+  - name: ansible
+    groups: ['docker']
+    ssh_key: "REDACTED_SSH_KEY"
+
+# Package configuration
+install_docker: true
 
 # Dotfiles configuration
 dotfiles_dest: "/opt/dotfiles"

@@ -810,7 +810,7 @@ test-ci: test-docker-build test-docker-up ## [CI] Run tests in parallel (simulat
 	@printf '$(BLUE)Running CI-Style Parallel Tests$(NC)\n'
 	@cd tests/docker && \
 		( docker compose exec -T wsl-test bash -c "cd /ansible && ansible-playbook playbooks/wsl/setup.yml -i tests/inventories/wsl.yml && bash tests/scripts/validate-shell.sh" ) & \
-		( docker compose exec -T server-test bash -c "cd /ansible && ansible-playbook playbooks/servers/shell.yml -i tests/inventories/ubuntu.yml && bash tests/scripts/validate-shell.sh" ) & \
+		( docker compose exec -T server-test bash -c "cd /ansible && ansible-playbook playbooks/servers/setup.yml -i tests/inventories/ubuntu.yml && bash tests/scripts/validate-shell.sh" ) & \
 		wait
 	@$(MAKE) test-docker-down
 ```

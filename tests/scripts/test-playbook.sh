@@ -15,7 +15,7 @@ if [ $# -lt 2 ]; then
     echo ""
     echo "Examples:"
     echo "  $0 playbooks/wsl/setup.yml tests/inventories/wsl.yml"
-    echo "  $0 playbooks/servers/base.yml tests/inventories/ubuntu.yml --check"
+    echo "  $0 playbooks/servers/setup.yml tests/inventories/ubuntu.yml --check"
     exit 1
 fi
 

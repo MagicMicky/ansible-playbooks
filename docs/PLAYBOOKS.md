@@ -139,59 +139,48 @@ exec zsh
 
 Located in `playbooks/servers/`
 
-### Base Server (`base.yml`)
+### Server Setup (`setup.yml`)
 
-**Purpose**: Configure base server system (packages, Docker, users).
+**Purpose**: Configure servers with base system and modern shell in a single playbook.
 
 **What It Does**:
-- Installs base packages: git, htop, zsh, curl, unzip
-- Installs Docker and Docker Compose
-- Creates users with SSH keys and sudo access
-- Configures passwordless sudo
+- **Base system** (via `server-base` role):
+  - Installs base packages: git, htop, zsh, curl, unzip
+  - Installs Docker and Docker Compose
+  - Creates users with SSH keys and sudo access
+  - Configures passwordless sudo
+- **Modern shell** (via `common-shell` role):
+  - Installs minimal modern shell (starship, fzf, zoxide)
+  - Skips heavy tools for performance (no bat, eza, fd)
+  - Auto-detects server type by hostname
+  - Configures server profile (minimal plugins)
 
 **Usage**:
 ```bash
 cd ~/Development/terminal_improvements/ansible-playbooks
 
-# Deploy to all servers
-ansible-playbook playbooks/servers/base.yml -i inventories/servers.yml
+# Full setup (base system + shell)
+ansible-playbook playbooks/servers/setup.yml -i inventories/servers.yml
+
+# Shell only (skip base system setup)
+ansible-playbook playbooks/servers/setup.yml -i inventories/servers.yml -e configure_server_base=false
 
 # Deploy to specific group
-ansible-playbook playbooks/servers/base.yml -i inventories/servers.yml --limit homelab
-
-# Dry run
-ansible-playbook playbooks/servers/base.yml -i inventories/servers.yml --check
-```
-
-**Variables** (`playbooks/servers/vars/base.yml`):
-- `server_users` - List of users to create
-- `install_docker: true` - Enable Docker installation
-
----
-
-### Server Shell (`shell.yml`)
-
-**Purpose**: Configure modern shell on servers (minimal, fast).
-
-**What It Does**:
-- Installs minimal modern shell (starship, fzf, zoxide)
-- Skips heavy tools for performance (no bat, eza, fd)
-- Auto-detects server type by hostname
-- Configures server profile (minimal plugins)
-
-**Usage**:
-```bash
-cd ~/Development/terminal_improvements/ansible-playbooks
-
-# Deploy to all servers
-ansible-playbook playbooks/servers/shell.yml -i inventories/servers.yml
+ansible-playbook playbooks/servers/setup.yml -i inventories/servers.yml --limit homelab
 
 # Deploy to production (careful!)
-ansible-playbook playbooks/servers/shell.yml -i inventories/servers.yml --limit production
+ansible-playbook playbooks/servers/setup.yml -i inventories/servers.yml --limit production
 
 # Dry run first (recommended)
-ansible-playbook playbooks/servers/shell.yml -i inventories/servers.yml --check
+ansible-playbook playbooks/servers/setup.yml -i inventories/servers.yml --check
 ```
+
+**Variables** (`playbooks/servers/vars/defaults.yml`):
+- `configure_server_base: true` - Enable/disable base system setup
+- `server_users` - List of users to create
+- `install_docker: true` - Enable Docker installation
+- `machine_profile: server` - Shell profile
+- `install_*` - Tool installation toggles
 
 **Server Type Detection** (by hostname):
 - `prod*`, `production*` → Red ! (production)
@@ -199,6 +188,10 @@ ansible-playbook playbooks/servers/shell.yml -i inventories/servers.yml --check
 - `gaming*` → Purple · (gaming)
 - `homelab*`, `home-*` → Cyan · (homelab)
 - Other → Green · (generic server)
+
+**Tags**:
+- `base`, `packages`, `docker`, `users` - Base system tasks
+- `shell`, `dotfiles` - Shell configuration tasks
 
 **Performance Target**: <50ms shell startup
 

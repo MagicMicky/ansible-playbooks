@@ -1,0 +1,64 @@
+---
+# Server Setup Playbook
+# Configures server with base system and modern shell
+# Consolidates base.yml and shell.yml into single playbook
+
+- name: Configure Server
+  hosts: all
+  become: false
+
+  vars_files:
+    - vars/defaults.yml
+
+  pre_tasks:
+    - name: Display deployment information
+      ansible.builtin.debug:
+        msg: |
+          Configuring server {{ inventory_hostname }}
+          Machine Profile: {{ machine_profile }}
+          Dotfiles: {{ dotfiles_repo_url }}
+          Branch: {{ dotfiles_branch }}
+
+    - name: Ensure prerequisites are installed
+      ansible.builtin.apt:
+        name:
+          - zsh
+          - git
+          - curl
+        state: present
+        update_cache: true
+      become: true
+      when: ansible_os_family == "Debian"
+      tags: ['prerequisites']
+
+  roles:
+    # Base system setup (packages, Docker, users)
+    - role: server-base
+      become: true
+      when: configure_server_base | default(true)
+      tags: ['base', 'packages', 'docker', 'users']
+
+    # Modern shell configuration (zinit, starship, modern tools)
+    - role: common-shell
+      tags: ['shell', 'dotfiles']
+
+  post_tasks:
+    - name: Display completion message
+      ansible.builtin.debug:
+        msg: |
+          Server configuration complete for {{ inventory_hostname }}
+
+          Base setup (if enabled):
+          - Base packages: git, htop, tar, zsh, acl, unzip, curl
+          - Docker and Docker Compose
+          - Users with SSH keys
+
+          Shell setup:
+          - Machine type auto-detected from hostname
+          - Starship prompt configured
+          - Modern tools installed
+
+          Next steps:
+          - Start new shell: exec zsh
+          - Verify Docker: docker ps
+          - Verify users: id magicmicky

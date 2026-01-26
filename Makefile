@@ -65,7 +65,7 @@ test-ci: test-docker-build test-docker-up ## [CI] Run tests in parallel (simulat
 	@printf '$(YELLOW)Running WSL and Server tests concurrently...$(NC)\n'
 	@cd tests/docker && \
 		( docker compose exec -T wsl-test bash -c "cd /ansible && ansible-playbook playbooks/wsl/setup.yml -i tests/inventories/wsl.yml && bash tests/scripts/validate-shell.sh" ) & \
-		( docker compose exec -T server-test bash -c "cd /ansible && ansible-playbook playbooks/servers/shell.yml -i tests/inventories/ubuntu.yml && bash tests/scripts/validate-shell.sh" ) & \
+		( docker compose exec -T server-test bash -c "cd /ansible && ansible-playbook playbooks/servers/setup.yml -i tests/inventories/ubuntu.yml && bash tests/scripts/validate-shell.sh" ) & \
 		wait
 	@printf '$(GREEN)✅ CI-style parallel tests complete$(NC)\n'
 	@$(MAKE) test-docker-down
@@ -142,7 +142,7 @@ test-visual-server: test-docker-up ## [MANUAL] Interactive visual test - apply p
 	@printf '$(BLUE)╚════════════════════════════════════════════════════════╝$(NC)\n'
 	@printf '\n'
 	@printf '$(YELLOW)Step 1:$(NC) Applying server shell playbook...\n'
-	@if cd tests/docker && docker compose exec -T server-test ansible-playbook playbooks/servers/shell.yml -i tests/inventories/ubuntu.yml; then \
+	@if cd tests/docker && docker compose exec -T server-test ansible-playbook playbooks/servers/setup.yml -i tests/inventories/ubuntu.yml; then \
 		printf '\n$(GREEN)✅ Setup complete!$(NC)\n'; \
 	else \
 		printf '\n$(RED)⚠️  Playbook had errors, but launching shell for debugging...$(NC)\n'; \
@@ -175,7 +175,7 @@ test-wsl: test-docker-up ## [PLAYBOOK] Apply WSL playbook in container
 
 test-server: test-docker-up ## [PLAYBOOK] Apply server playbook in container
 	@printf '$(BLUE)Testing server playbooks...$(NC)\n'
-	cd tests/docker && docker compose exec -T server-test ansible-playbook playbooks/servers/shell.yml -i tests/inventories/ubuntu.yml
+	cd tests/docker && docker compose exec -T server-test ansible-playbook playbooks/servers/setup.yml -i tests/inventories/ubuntu.yml
 
 test-idempotency-wsl: test-docker-up ## [VALIDATION] WSL playbook idempotency test
 	@printf '$(BLUE)Testing WSL playbook idempotency...$(NC)\n'
@@ -185,7 +185,7 @@ test-idempotency-wsl: test-docker-up ## [VALIDATION] WSL playbook idempotency te
 test-idempotency-server: test-docker-up ## [VALIDATION] Server playbook idempotency test
 	@printf '$(BLUE)Testing server playbook idempotency...$(NC)\n'
 	@printf '$(YELLOW)Note: Runs playbook twice, checks for changes on 2nd run$(NC)\n'
-	cd tests/docker && docker compose exec -T server-test /ansible/tests/scripts/test-idempotency.sh playbooks/servers/shell.yml tests/inventories/ubuntu.yml
+	cd tests/docker && docker compose exec -T server-test /ansible/tests/scripts/test-idempotency.sh playbooks/servers/setup.yml tests/inventories/ubuntu.yml
 
 test-validation-wsl: test-docker-up ## [VALIDATION] Validate WSL shell configuration
 	@printf '$(BLUE)Validating WSL shell configuration...$(NC)\n'
@@ -275,15 +275,15 @@ wsl: deps ## [DEPLOY] Apply WSL setup playbook
 	@printf '$(BLUE)Running WSL setup playbook...$(NC)\n'
 	ansible-playbook playbooks/wsl/setup.yml -i inventories/localhost -K
 
-server-base: deps ## [DEPLOY] Apply server base playbook (requires INVENTORY=path)
-	@printf '$(BLUE)Running server base playbook...$(NC)\n'
-	@printf '$(RED)Usage: make server-base INVENTORY=inventories/servers.yml$(NC)\n'
-	ansible-playbook playbooks/servers/base.yml -i ${INVENTORY} -K
+server: deps ## [DEPLOY] Apply server setup playbook (requires INVENTORY=path)
+	@printf '$(BLUE)Running server setup playbook...$(NC)\n'
+	@printf '$(RED)Usage: make server INVENTORY=inventories/servers.yml$(NC)\n'
+	ansible-playbook playbooks/servers/setup.yml -i ${INVENTORY} -K
 
-server-shell: deps ## [DEPLOY] Apply server shell playbook (requires INVENTORY=path)
-	@printf '$(BLUE)Running server shell playbook...$(NC)\n'
-	@printf '$(RED)Usage: make server-shell INVENTORY=inventories/servers.yml$(NC)\n'
-	ansible-playbook playbooks/servers/shell.yml -i ${INVENTORY} -K
+server-shell-only: deps ## [DEPLOY] Apply server setup playbook, shell only (requires INVENTORY=path)
+	@printf '$(BLUE)Running server setup playbook (shell only)...$(NC)\n'
+	@printf '$(RED)Usage: make server-shell-only INVENTORY=inventories/servers.yml$(NC)\n'
+	ansible-playbook playbooks/servers/setup.yml -i ${INVENTORY} -K -e configure_server_base=false
 
 ## ═══════════════════════════════════════════════════════════
 ## Documentation & Info
