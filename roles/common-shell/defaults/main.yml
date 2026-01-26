@@ -1,6 +1,11 @@
 ---
 # common-shell role default variables
 
+# Target user configuration (allows configuring shell for a specific user)
+# When not set, defaults to the user running ansible
+target_user: "{{ ansible_user_id }}"
+target_home: "{{ '/root' if target_user == 'root' else '/home/' + target_user }}"
+
 # Machine profile: personal, pro, server, wsl
 machine_profile: personal
 
@@ -10,7 +15,7 @@ machine_profile: personal
 # server_type: prod
 
 # Dotfiles configuration
-dotfiles_dest: "{{ ansible_env.HOME }}/Development/dotfiles"  # Destination directory for cloned dotfiles
+dotfiles_dest: "{{ target_home }}/Development/dotfiles"  # Destination directory for cloned dotfiles
 dotfiles_repo_url: ""  # Source repository URL (set in playbook)
 dotfiles_branch: master  # Branch to checkout
 
@@ -28,11 +33,11 @@ skip_heavy_tools: "{{ machine_profile in ['server', 'prod', 'dev-server', 'gamin
 
 # Zinit configuration
 zinit_install: true
-zinit_home: "{{ ansible_env.HOME }}/.local/share/zinit"
+zinit_home: "{{ target_home }}/.local/share/zinit"
 
 # Machine detection
-machine_type_file: "{{ ansible_env.HOME }}/.config/shell/machine-type"
-enable_pro_file: "{{ ansible_env.HOME }}/.config/shell/laptop-pro"
+machine_type_file: "{{ target_home }}/.config/shell/machine-type"
+enable_pro_file: "{{ target_home }}/.config/shell/laptop-pro"
 
 # Starship configuration
 starship_config_path: "{{ dotfiles_dest }}/starship/starship.toml"

@@ -5,29 +5,41 @@
   include_vars:
     file: catppuccin-mocha.yml
 
-- name: Ensure .config/shell directory exists
-  file:
-    path: "{{ ansible_env.HOME }}/.config/shell"
-    state: directory
-    mode: '0755'
-
 - name: Ensure .config directory exists
   file:
-    path: "{{ ansible_env.HOME }}/.config"
+    path: "{{ target_home }}/.config"
     state: directory
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
     mode: '0755'
+  become: yes
+
+- name: Ensure .config/shell directory exists
+  file:
+    path: "{{ target_home }}/.config/shell"
+    state: directory
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0755'
+  become: yes
 
 - name: Ensure .config/bat directory exists
   file:
-    path: "{{ ansible_env.HOME }}/.config/bat"
+    path: "{{ target_home }}/.config/bat"
     state: directory
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
     mode: '0755'
+  become: yes
 
 - name: Ensure .config/bat/themes directory exists
   file:
-    path: "{{ ansible_env.HOME }}/.config/bat/themes"
+    path: "{{ target_home }}/.config/bat/themes"
     state: directory
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
     mode: '0755'
+  become: yes
 
 - name: Detect server type from hostname
   set_fact:
@@ -60,18 +72,22 @@
 - name: Generate Starship configuration with machine-specific colors
   template:
     src: starship.toml.j2
-    dest: "{{ ansible_env.HOME }}/.config/starship.toml"
+    dest: "{{ target_home }}/.config/starship.toml"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
     mode: '0644'
+  become: yes
 
 - name: Download Catppuccin Mocha bat theme
   get_url:
     url: "https://raw.githubusercontent.com/catppuccin/bat/main/themes/Catppuccin%20Mocha.tmTheme"
-    dest: "{{ ansible_env.HOME }}/.config/bat/themes/Catppuccin Mocha.tmTheme"
+    dest: "{{ target_home }}/.config/bat/themes/Catppuccin Mocha.tmTheme"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
     mode: '0644'
+  become: yes
   register: bat_theme_download
-  when: not ansible_check_mode  # Skip in check mode (directory doesn't actually exist yet)
-  # Note: Directory created above (lines 14-30), so this should succeed in apply mode
-  # Real errors (network, permissions) will now fail properly
+  when: not ansible_check_mode
 
 - name: Check if bat is installed
   command: which bat
@@ -81,6 +97,8 @@
 
 - name: Build bat cache (only if bat is installed and theme was downloaded)
   command: bat cache --build
+  become: yes
+  become_user: "{{ target_user }}"
   when:
     - not ansible_check_mode
     - bat_installed.rc == 0
@@ -90,21 +108,30 @@
 - name: Generate shell theme configuration
   template:
     src: shell-theme.zsh.j2
-    dest: "{{ ansible_env.HOME }}/.config/shell/theme.zsh"
+    dest: "{{ target_home }}/.config/shell/theme.zsh"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
     mode: '0644'
+  become: yes
 
 - name: Set machine type marker (for documentation/debugging)
   copy:
     content: "{{ machine_profile }}"
     dest: "{{ machine_type_file }}"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
     mode: '0644'
+  become: yes
   when: machine_profile is defined
 
 - name: Set pro profile marker (work laptop - for documentation/debugging)
   copy:
     content: ""
     dest: "{{ enable_pro_file }}"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
     mode: '0644'
+  become: yes
   when: machine_profile == "work"
 
 - name: Check if dotfiles repository exists
@@ -112,11 +139,25 @@
     path: "{{ dotfiles_dest }}/.git"
   register: dotfiles_git_dir
 
+- name: Ensure dotfiles parent directory exists
+  file:
+    path: "{{ dotfiles_dest | dirname }}"
+    state: directory
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0755'
+  become: yes
+  when:
+    - dotfiles_repo_url is defined
+    - dotfiles_repo_url != ""
+
 - name: Clone dotfiles repository (if not exists)
   git:
     repo: "{{ dotfiles_repo_url }}"
     dest: "{{ dotfiles_dest }}"
     version: "{{ dotfiles_branch }}"
+  become: yes
+  become_user: "{{ target_user }}"
   when:
     - dotfiles_repo_url is defined
     - dotfiles_repo_url != ""
@@ -128,6 +169,8 @@
     dest: "{{ dotfiles_dest }}"
     version: "{{ dotfiles_branch }}"
     update: yes
+  become: yes
+  become_user: "{{ target_user }}"
   when:
     - dotfiles_repo_url is defined
     - dotfiles_repo_url != ""
@@ -135,15 +178,18 @@
 
 - name: Check if existing .zshrc exists
   stat:
-    path: "{{ ansible_env.HOME }}/.zshrc"
+    path: "{{ target_home }}/.zshrc"
   register: existing_zshrc
 
 - name: Backup existing .zshrc if it exists and is not already a symlink
   copy:
-    src: "{{ ansible_env.HOME }}/.zshrc"
-    dest: "{{ ansible_env.HOME }}/.zshrc.backup-{{ ansible_date_time.epoch }}"
+    src: "{{ target_home }}/.zshrc"
+    dest: "{{ target_home }}/.zshrc.backup-{{ ansible_date_time.epoch }}"
     remote_src: yes
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
     mode: preserve
+  become: yes
   when:
     - existing_zshrc.stat.exists
     - not existing_zshrc.stat.islnk  # Only backup if it's NOT already a symlink
@@ -153,7 +199,7 @@
 
 - name: Show backup location
   debug:
-    msg: "Existing .zshrc backed up to {{ ansible_env.HOME }}/.zshrc.backup-{{ ansible_date_time.epoch }}"
+    msg: "Existing .zshrc backed up to {{ target_home }}/.zshrc.backup-{{ ansible_date_time.epoch }}"
   when:
     - backup_result is defined
     - backup_result.changed | default(false)
@@ -161,22 +207,31 @@
 - name: Link new .zshrc
   file:
     src: "{{ dotfiles_dest }}/zsh/.zshrc"
-    dest: "{{ ansible_env.HOME }}/.zshrc"
+    dest: "{{ target_home }}/.zshrc"
     state: link
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
     force: yes
+  become: yes
 
 - name: Ensure .zsh.d directory exists
   file:
-    path: "{{ ansible_env.HOME }}/.zsh.d"
+    path: "{{ target_home }}/.zsh.d"
     state: directory
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
     mode: '0755'
+  become: yes
 
 - name: Symlink core zsh config files to .zsh.d
   file:
     src: "{{ dotfiles_dest }}/zsh/core/{{ item }}"
-    dest: "{{ ansible_env.HOME }}/.zsh.d/{{ item }}"
+    dest: "{{ target_home }}/.zsh.d/{{ item }}"
     state: link
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
     force: yes
+  become: yes
   loop:
     - 01-zinit.zsh
     - 10-path.zsh
@@ -188,9 +243,12 @@
 - name: Symlink profile zsh config files to .zsh.d
   file:
     src: "{{ dotfiles_dest }}/zsh/profiles/{{ machine_profile }}/{{ item }}"
-    dest: "{{ ansible_env.HOME }}/.zsh.d/{{ item }}"
+    dest: "{{ target_home }}/.zsh.d/{{ item }}"
     state: link
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
     force: yes
+  become: yes
   loop:
     - plugins.zsh
     - config.zsh
@@ -199,8 +257,11 @@
 - name: Create machine type marker file
   copy:
     content: "{{ machine_profile }}"
-    dest: "{{ ansible_env.HOME }}/.zsh.d/.machine-type"
+    dest: "{{ target_home }}/.zsh.d/.machine-type"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
     mode: '0644'
+  become: yes
 
 - name: Include set-zsh-shell tasks
   include_tasks: set-zsh-shell.yml
