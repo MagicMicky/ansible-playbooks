@@ -25,12 +25,13 @@
       include_role:
         name: common-shell
       vars:
-        target_user: "{{ item.name }}"
-        target_home: "/home/{{ item.name }}"
-        dotfiles_dest: "/home/{{ item.name }}/dotfiles"
+        target_user: "{{ server_user.name }}"
+        target_home: "/home/{{ server_user.name }}"
+        dotfiles_dest: "/home/{{ server_user.name }}/dotfiles"
       loop: "{{ server_users | selectattr('shell', 'defined') | selectattr('shell', 'equalto', '/bin/zsh') | list }}"
       loop_control:
-        label: "{{ item.name }}"
+        loop_var: server_user
+        label: "{{ server_user.name }}"
       tags: ['shell', 'dotfiles']
 
   post_tasks:
