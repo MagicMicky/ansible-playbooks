@@ -17,7 +17,7 @@
           Configuring Personal Mac
           Dotfiles: {{ dotfiles_repo }}
           Branch: {{ dotfiles_repo_version }}
-          Machine Profile: laptop
+          Machine Profile: {{ machine_profile }}
 
   roles:
     # Homebrew installation and package management
@@ -27,7 +27,6 @@
     # Modern shell configuration (zinit, starship, modern tools)
     - role: common-shell
       vars:
-        machine_profile: laptop
         dotfiles_repo_url: "{{ dotfiles_repo }}"
         dotfiles_branch: "{{ dotfiles_repo_version }}"
         dotfiles_dest: "{{ dotfiles_repo_local_destination | default(ansible_env.HOME ~ '/dotfiles') }}"
@@ -44,7 +43,7 @@
   tasks:
     # Install extra packages if any are defined
     - name: Install extra packages
-      ansible.builtin.import_tasks: ../../tasks/mac/extra-packages.yml
+      ansible.builtin.import_tasks: tasks/extra-packages.yml
       when: >
         (composer_packages | default([]) | length > 0) or
         (npm_packages | default([]) | length > 0) or

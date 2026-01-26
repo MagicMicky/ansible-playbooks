@@ -1,39 +1,24 @@
 ---
-# Server Setup Playbook
+# Server Shell Setup Playbook
 # For servers (minimal configuration for performance)
 
 - name: Configure Server Environment
   hosts: all
-  become: no
+  become: false
 
-  vars:
-    machine_profile: server
-    # Note: dotfiles_dest defaults to /opt/dotfiles for servers (set in role defaults)
-    # Override in inventory for tests: dotfiles_dest: "{{ ansible_env.HOME }}/dotfiles-test"
-    dotfiles_repo_url: "https://github.com/MagicMicky/dotfiles.git"
-    dotfiles_branch: master
-
-    # Minimal tool installation for servers
-    install_starship: true
-    install_fzf: true
-    install_zoxide: true
-    install_bat: false      # Skip on servers
-    install_eza: false      # Skip on servers
-    install_fd: false       # Skip on servers
-    install_ripgrep: true   # Useful for log searching
-
-    skip_heavy_tools: true
+  vars_files:
+    - vars/defaults.yml
 
   pre_tasks:
     - name: Ensure prerequisites are installed
-      apt:
+      ansible.builtin.apt:
         name:
           - zsh
           - git
           - curl
         state: present
-        update_cache: yes
-      become: yes
+        update_cache: true
+      become: true
       when: ansible_os_family == "Debian"
       tags: ['prerequisites']
 
@@ -43,12 +28,12 @@
 
   post_tasks:
     - name: Display server type
-      debug:
+      ansible.builtin.debug:
         msg: |
-          ✅ Server configuration complete for {{ inventory_hostname }}
+          Server configuration complete for {{ inventory_hostname }}
 
           Machine type will be auto-detected based on hostname:
-          - prod* → Production (!)
-          - dev-* → Dev server (·)
-          - gaming* → Gaming (·)
-          - homelab* → Homelab (·)
+          - prod* -> Production (!)
+          - dev-* -> Dev server
+          - gaming* -> Gaming
+          - homelab* -> Homelab

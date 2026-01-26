@@ -5,35 +5,22 @@
 - name: Configure WSL Environment
   hosts: localhost
   connection: local
-  become: no
+  become: false
 
-  vars:
-    machine_profile: wsl
-    # Dotfiles configuration
-    dotfiles_repo_url: "https://github.com/MagicMicky/dotfiles.git"
-    dotfiles_branch: master
-    # dotfiles_dest defaults to ~/Development/dotfiles (from role defaults)
-
-    # Modern tools installation
-    install_starship: true
-    install_fzf: true
-    install_zoxide: true
-    install_bat: false  # Available but not critical for WSL
-    install_eza: false  # Available but not critical for WSL
-    install_fd: false   # Available but not critical for WSL
-    install_ripgrep: true
+  vars_files:
+    - vars/defaults.yml
 
   pre_tasks:
     - name: Display deployment information
-      debug:
+      ansible.builtin.debug:
         msg: |
           Deploying modern shell configuration to WSL
           Machine Profile: {{ machine_profile }}
-          Dotfiles Location: {{ dotfiles_dest }}
+          Dotfiles Location: {{ dotfiles_dest | default('~/Development/dotfiles') }}
           Branch: {{ dotfiles_branch }}
 
     - name: Ensure prerequisites are installed
-      apt:
+      ansible.builtin.apt:
         name:
           - zsh
           - git
@@ -41,8 +28,8 @@
           - wget
           - build-essential
         state: present
-        update_cache: yes
-      become: yes
+        update_cache: true
+      become: true
       tags: ['prerequisites']
 
   roles:
@@ -50,21 +37,21 @@
       tags: ['shell', 'dotfiles']
 
     - role: app-config
+      when: configure_apps | default(false)
       tags: ['apps', 'config']
 
   post_tasks:
     - name: Display completion message
-      debug:
+      ansible.builtin.debug:
         msg: |
-          ✅ WSL configuration complete!
+          WSL configuration complete!
 
           Next steps:
           1. Start a new shell: exec zsh
           2. Or set as default: chsh -s $(which zsh)
 
           On first startup:
-          - Zinit will auto-install (takes ~10 seconds)
+          - Zinit will auto-install
           - Plugins will download automatically
-          - You'll see: "🚀 Modern shell loaded | Machine: wsl"
 
           Your prompt should show: [λ] in blue

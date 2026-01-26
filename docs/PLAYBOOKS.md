@@ -88,7 +88,7 @@ ansible-playbook playbooks/mac/work.yml -i inventories/localhost -K --skip-tags 
 **Variables**:
 - Inherits from `vars/personal.yml`
 - Extends with `vars/work.yml`
-- `configure_work: yes` - Enables work role
+- `configure_work: true` - Enables work role
 - Additional work packages and apps
 
 **Security Note**:
@@ -123,9 +123,10 @@ ansible-playbook playbooks/wsl/setup.yml
 exec zsh
 ```
 
-**Variables**:
+**Variables** (`playbooks/wsl/vars/defaults.yml`):
 - `machine_profile: wsl` - Enables WSL-specific configs
 - `dotfiles_branch: master` - Branch to use
+- `install_*` - Tool installation toggles
 
 **Expected Result**:
 - Blue λ prompt
@@ -162,10 +163,9 @@ ansible-playbook playbooks/servers/base.yml -i inventories/servers.yml --limit h
 ansible-playbook playbooks/servers/base.yml -i inventories/servers.yml --check
 ```
 
-**Variables** (`playbooks/servers/vars/defaults.yml`):
+**Variables** (`playbooks/servers/vars/base.yml`):
 - `server_users` - List of users to create
 - `install_docker: true` - Enable Docker installation
-- `base_packages` - Packages to install
 
 ---
 

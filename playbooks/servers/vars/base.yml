@@ -1,0 +1,16 @@
+---
+# Server base configuration variables
+# Used by base.yml playbook for system setup
+
+# User configuration
+server_users:
+  - name: magicmicky
+    shell: /bin/zsh
+    groups: ['sudo', 'docker']
+    ssh_key: "REDACTED_SSH_KEY"
+  - name: ansible
+    groups: ['docker']
+    ssh_key: "REDACTED_SSH_KEY"
+
+# Package configuration
+install_docker: true

@@ -5,25 +5,14 @@
 
 - name: Configure Server Base
   hosts: all
-  become: yes
+  become: true
 
-  vars:
-    # User configuration
-    server_users:
-      - name: magicmicky
-        shell: /bin/zsh
-        groups: ['sudo', 'docker']
-        ssh_key: "REDACTED_SSH_KEY"
-      - name: ansible
-        groups: ['docker']
-        ssh_key: "REDACTED_SSH_KEY"
-
-    # Package configuration
-    install_docker: true
+  vars_files:
+    - vars/base.yml
 
   pre_tasks:
     - name: Display deployment information
-      debug:
+      ansible.builtin.debug:
         msg: |
           Configuring base system for {{ inventory_hostname }}
           Installing: packages, Docker, users
@@ -34,7 +23,7 @@
 
   post_tasks:
     - name: Display completion message
-      debug:
+      ansible.builtin.debug:
         msg: |
           Base server configuration complete for {{ inventory_hostname }}
 
@@ -44,6 +33,6 @@
           - Users: magicmicky, ansible (with SSH keys)
 
           Next steps:
-          - Run shell-setup.yml to configure modern shell
+          - Run shell.yml to configure modern shell
           - Verify Docker: docker ps
           - Verify users: id magicmicky

@@ -1,0 +1,23 @@
+---
+# WSL configuration variables
+# Used by WSL setup playbook
+
+# Machine profile for shell configuration
+machine_profile: wsl
+
+# Dotfiles configuration
+dotfiles_repo_url: "https://github.com/MagicMicky/dotfiles.git"
+dotfiles_branch: master
+# dotfiles_dest defaults to ~/Development/dotfiles (from role defaults)
+
+# Modern tools installation
+# WSL gets a balanced set - not as minimal as servers, not as full as Mac
+install_starship: true
+install_fzf: true
+install_zoxide: true
+install_bat: false      # Available but not critical for WSL
+install_eza: false      # Available but not critical for WSL
+install_fd: false       # Available but not critical for WSL
+install_ripgrep: true
+
+# Target shell startup time: <100ms
