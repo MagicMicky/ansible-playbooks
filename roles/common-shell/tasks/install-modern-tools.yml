@@ -58,19 +58,6 @@
     - not fzf_binary.stat.exists
   changed_when: true
 
-- name: Add fzf to PATH in profile config
-  blockinfile:
-    path: "{{ target_home }}/.zshenv"
-    create: yes
-    owner: "{{ target_user }}"
-    group: "{{ target_user }}"
-    marker: "# {mark} ANSIBLE MANAGED BLOCK - FZF"
-    block: |
-      # Add fzf to PATH
-      export PATH="$HOME/.fzf/bin:$PATH"
-  become: yes
-  when: not is_macos
-
 - name: Check if zoxide is installed
   stat:
     path: "{{ target_home }}/.local/bin/zoxide"
