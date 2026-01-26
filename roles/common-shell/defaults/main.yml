@@ -3,8 +3,10 @@
 
 # Target user configuration (allows configuring shell for a specific user)
 # When not set, defaults to the user running ansible
+# NOTE: If you override target_user, you must also override target_home
+#       (e.g., /home/<user> on Linux, /Users/<user> on macOS)
 target_user: "{{ ansible_user_id }}"
-target_home: "{{ '/root' if target_user == 'root' else '/home/' + target_user }}"
+target_home: "{{ ansible_env.HOME }}"
 
 # Machine profile: personal, pro, server, wsl
 machine_profile: personal
