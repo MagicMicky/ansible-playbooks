@@ -216,6 +216,20 @@
     force: yes
   become: yes
 
+- name: Skip global compinit on Debian/Ubuntu (saves ~400ms)
+  blockinfile:
+    path: "{{ target_home }}/.zshenv"
+    create: yes
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - COMPINIT"
+    block: |
+      # Skip Ubuntu/Debian's global compinit in /etc/zsh/zshrc
+      # We run our own cached compinit in .zshrc
+      skip_global_compinit=1
+  become: yes
+  when: is_debian
+
 - name: Ensure .zsh.d directory exists
   file:
     path: "{{ target_home }}/.zsh.d"
