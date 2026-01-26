@@ -33,7 +33,7 @@ This testing infrastructure provides safe, reproducible testing of Ansible playb
 
 **What Is Tested**:
 - ✅ WSL playbook (`playbooks/wsl/setup.yml`) - Docker + CI
-- ✅ Server playbooks (`playbooks/servers/*.yml`) - Docker + CI
+- ✅ Server playbook (`playbooks/servers/setup.yml`) - Docker + CI
 - ✅ Mac personal playbook (`playbooks/mac/personal.yml`) - GitHub Actions macOS runner
 - ✅ Security validation (permissions, secrets detection)
 - ✅ Profile isolation (no cross-contamination)
@@ -284,7 +284,7 @@ Generic playbook test runner with timing.
 
 # Examples
 ./tests/scripts/test-playbook.sh playbooks/wsl/setup.yml tests/inventories/wsl.yml
-./tests/scripts/test-playbook.sh playbooks/servers/base.yml tests/inventories/ubuntu.yml --check
+./tests/scripts/test-playbook.sh playbooks/servers/setup.yml tests/inventories/ubuntu.yml --check
 
 # What it does
 # - Validates playbook and inventory exist
@@ -569,9 +569,9 @@ make mac-work              # Apply work Mac playbook
 # WSL playbook
 make wsl-setup             # Apply WSL setup
 
-# Server playbooks (requires INVENTORY variable)
-make server-base INVENTORY=path/to/inventory
-make server-shell INVENTORY=path/to/inventory
+# Server playbook (requires INVENTORY variable)
+make server INVENTORY=path/to/inventory
+make server-shell-only INVENTORY=path/to/inventory  # Skip base setup
 ```
 
 ### Documentation Commands

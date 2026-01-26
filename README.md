@@ -36,11 +36,11 @@ exec zsh
 ### Servers
 
 ```bash
-# Base system (packages, Docker, users)
-ansible-playbook playbooks/servers/base.yml -i inventories/servers.yml
+# Full server setup (base system + shell)
+ansible-playbook playbooks/servers/setup.yml -i inventories/servers.yml
 
-# Modern shell
-ansible-playbook playbooks/servers/shell.yml -i inventories/servers.yml
+# Shell only (skip base system setup)
+ansible-playbook playbooks/servers/setup.yml -i inventories/servers.yml -e configure_server_base=false
 ```
 
 ## Repository Structure
@@ -63,8 +63,7 @@ ansible-playbooks/
 │   │   ├── setup.yml      # WSL setup
 │   │   └── vars/          # WSL variables
 │   └── servers/
-│       ├── base.yml       # Base server config
-│       ├── shell.yml      # Shell setup
+│       ├── setup.yml      # Server setup (base + shell)
 │       └── vars/          # Server variables
 │
 ├── inventories/           # Inventory examples
@@ -146,7 +145,7 @@ See `tests/mac-validation-checklist.md` for complete Mac testing procedures.
 **New Playbooks**:
 - `playbooks/mac/personal.yml` - Replaces `mac-dev-playbook/main.yml`
 - `playbooks/mac/work.yml` - Work laptop with pro profile
-- `playbooks/servers/base.yml` - Server base configuration
+- `playbooks/servers/setup.yml` - Consolidated server setup (base + shell)
 
 ## Features
 

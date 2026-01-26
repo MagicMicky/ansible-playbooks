@@ -69,7 +69,7 @@ jobs:
       matrix:
         playbook:
           - playbooks/wsl/setup.yml
-          - playbooks/servers/shell.yml
+          - playbooks/servers/setup.yml
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

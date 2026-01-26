@@ -138,11 +138,11 @@ echo -e "${BLUE}═════════════════════�
 
 run_test_in_container "server-test" \
     "Server Playbook (Check Mode)" \
-    "ansible-playbook playbooks/servers/shell.yml -i tests/inventories/ubuntu.yml --check"
+    "ansible-playbook playbooks/servers/setup.yml -i tests/inventories/ubuntu.yml --check"
 
 run_test_in_container "server-test" \
     "Server Playbook (Apply)" \
-    "ansible-playbook playbooks/servers/shell.yml -i tests/inventories/ubuntu.yml"
+    "ansible-playbook playbooks/servers/setup.yml -i tests/inventories/ubuntu.yml"
 
 run_test_in_container "server-test" \
     "Server Shell Validation" \
@@ -150,7 +150,7 @@ run_test_in_container "server-test" \
 
 run_test_in_container "server-test" \
     "Server Idempotency" \
-    "bash tests/scripts/test-idempotency.sh playbooks/servers/shell.yml tests/inventories/ubuntu.yml"
+    "bash tests/scripts/test-idempotency.sh playbooks/servers/setup.yml tests/inventories/ubuntu.yml"
 
 run_test_in_container "server-test" \
     "Server Security Validation" \
