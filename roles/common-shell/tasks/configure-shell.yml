@@ -137,6 +137,7 @@
 - name: Check if dotfiles repository exists
   stat:
     path: "{{ dotfiles_dest }}/.git"
+  become: yes
   register: dotfiles_git_dir
 
 - name: Ensure dotfiles parent directory exists
@@ -179,6 +180,7 @@
 - name: Check if existing .zshrc exists
   stat:
     path: "{{ target_home }}/.zshrc"
+  become: yes
   register: existing_zshrc
 
 - name: Backup existing .zshrc if it exists and is not already a symlink

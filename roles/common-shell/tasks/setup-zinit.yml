@@ -13,6 +13,7 @@
 - name: Check if zinit is already installed
   stat:
     path: "{{ zinit_home }}/zinit.git"
+  become: yes
   register: zinit_installation
 
 - name: Clone zinit repository
