@@ -43,6 +43,7 @@
 - name: Check if fzf is installed
   stat:
     path: "{{ target_home }}/.fzf/bin/fzf"
+  become: yes
   register: fzf_binary
 
 - name: Install fzf with shell integration (Linux)
@@ -73,6 +74,7 @@
 - name: Check if zoxide is installed
   stat:
     path: "{{ target_home }}/.local/bin/zoxide"
+  become: yes
   register: zoxide_binary
 
 - name: Install zoxide (Linux)
