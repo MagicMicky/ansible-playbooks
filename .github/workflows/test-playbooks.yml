@@ -149,10 +149,96 @@ jobs:
         run: |
           ./tests/scripts/test-idempotency.sh ${{ matrix.playbook }} tests/inventories/wsl.yml
 
+  # Determines whether macOS tests should run based on:
+  # - File changes (mac playbooks or roles)
+  # - Weekly cache (ensure tests run at least once per week)
+  check-macos-needed:
+    name: Check if macOS Tests Needed
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.decide.outputs.should_run }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get current week
+        id: week
+        run: echo "week=$(date +%Y-W%V)" >> $GITHUB_OUTPUT
+
+      - name: Check weekly cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: .macos-test-marker
+          key: macos-tested-${{ steps.week.outputs.week }}
+          lookup-only: true
+
+      - name: Check for mac-related changes
+        id: changes
+        run: |
+          # Only mac-specific paths trigger immediate macOS tests:
+          # - playbooks/mac/          (mac playbooks and vars)
+          # - roles/mac-system/       (mac-specific system settings)
+          # - roles/app-config/       (mac app configuration)
+          #
+          # Note: roles/common-shell/ is NOT included here.
+          # It's cross-platform and tested on Ubuntu. Darwin-specific issues
+          # are caught by the weekly fallback run.
+          MAC_PATHS='^(playbooks/mac/|roles/mac-system/|roles/app-config/)'
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E "$MAC_PATHS" || true)
+          else
+            CHANGED=$(git diff --name-only HEAD~1 | grep -E "$MAC_PATHS" || true)
+          fi
+          if [[ -n "$CHANGED" ]]; then
+            echo "mac_changed=true" >> $GITHUB_OUTPUT
+            echo "Changed mac-related files:"
+            echo "$CHANGED"
+          else
+            echo "mac_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Decide if macOS tests should run
+        id: decide
+        run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Mac files changed: ${{ steps.changes.outputs.mac_changed }}"
+          echo "Cache hit: ${{ steps.cache.outputs.cache-hit }}"
+
+          # Always run on manual trigger
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "Manual trigger - will run"
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Always run on PRs (if targeting main/develop, which is already filtered)
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "PR - will run"
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # For pushes: run if mac files changed OR cache miss (weekly)
+          if [[ "${{ steps.changes.outputs.mac_changed }}" == "true" ]]; then
+            echo "Mac files changed - will run"
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          elif [[ "${{ steps.cache.outputs.cache-hit }}" != "true" ]]; then
+            echo "Cache miss (weekly) - will run"
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          else
+            echo "No mac changes and ran this week - skipping"
+            echo "should_run=false" >> $GITHUB_OUTPUT
+          fi
+
   test-macos:
     name: Test Mac Playbooks
     runs-on: macos-latest
-    needs: syntax-check
+    needs: [syntax-check, check-macos-needed]
+    if: needs.check-macos-needed.outputs.should_run == 'true'
     strategy:
       matrix:
         playbook:
@@ -203,7 +289,8 @@ jobs:
   test-macos-idempotency:
     name: Test Mac Idempotency
     runs-on: macos-latest
-    needs: test-macos
+    needs: [test-macos, check-macos-needed]
+    if: needs.check-macos-needed.outputs.should_run == 'true'
     strategy:
       matrix:
         playbook:
@@ -233,10 +320,32 @@ jobs:
         run: |
           ./tests/scripts/test-idempotency.sh ${{ matrix.playbook }} tests/inventories/mac.yml
 
+  # Update the weekly cache after successful macOS tests
+  update-macos-cache:
+    name: Update macOS Test Cache
+    runs-on: ubuntu-latest
+    needs: [test-macos, test-macos-idempotency]
+    if: success()
+    steps:
+      - name: Get current week
+        id: week
+        run: echo "week=$(date +%Y-W%V)" >> $GITHUB_OUTPUT
+
+      - name: Create marker file
+        run: |
+          mkdir -p .cache-dir
+          echo "macOS tests passed at $(date -Iseconds)" > .cache-dir/.macos-test-marker
+
+      - name: Save weekly cache
+        uses: actions/cache/save@v4
+        with:
+          path: .cache-dir/.macos-test-marker
+          key: macos-tested-${{ steps.week.outputs.week }}
+
   summary:
     name: Test Summary
     runs-on: ubuntu-latest
-    needs: [syntax-check, ansible-lint, test-ubuntu, test-idempotency, test-macos, test-macos-idempotency]
+    needs: [syntax-check, ansible-lint, test-ubuntu, test-idempotency, check-macos-needed, test-macos, test-macos-idempotency]
     if: always()
     steps:
       - name: Check test results
@@ -248,22 +357,28 @@ jobs:
           echo "  Ansible Lint: ${{ needs.ansible-lint.result }}"
           echo "  Ubuntu Tests: ${{ needs.test-ubuntu.result }}"
           echo "  Ubuntu Idempotency: ${{ needs.test-idempotency.result }}"
+          echo "  macOS Needed: ${{ needs.check-macos-needed.outputs.should_run }}"
           echo "  macOS Tests: ${{ needs.test-macos.result }}"
           echo "  macOS Idempotency: ${{ needs.test-macos-idempotency.result }}"
           echo ""
 
-          if [[ "${{ needs.syntax-check.result }}" == "success" ]] && \
-             [[ "${{ needs.ansible-lint.result }}" == "success" ]] && \
-             [[ "${{ needs.test-ubuntu.result }}" == "success" ]] && \
-             [[ "${{ needs.test-idempotency.result }}" == "success" ]] && \
-             [[ "${{ needs.test-macos.result }}" == "success" ]] && \
-             [[ "${{ needs.test-macos-idempotency.result }}" == "success" ]]; then
-            echo "✅ All tests passed!"
-            echo "  - Ubuntu (WSL + Server): ✅"
-            echo "  - macOS (Personal): ✅"
-            echo "  - Idempotency (all platforms): ✅"
-            exit 0
-          else
-            echo "❌ Some tests failed"
+          # Core tests must pass
+          if [[ "${{ needs.syntax-check.result }}" != "success" ]] || \
+             [[ "${{ needs.ansible-lint.result }}" != "success" ]] || \
+             [[ "${{ needs.test-ubuntu.result }}" != "success" ]] || \
+             [[ "${{ needs.test-idempotency.result }}" != "success" ]]; then
+            echo "❌ Core tests failed"
             exit 1
+          fi
+
+          # macOS tests: must pass if they ran, skip is OK
+          if [[ "${{ needs.check-macos-needed.outputs.should_run }}" == "true" ]]; then
+            if [[ "${{ needs.test-macos.result }}" != "success" ]] || \
+               [[ "${{ needs.test-macos-idempotency.result }}" != "success" ]]; then
+              echo "❌ macOS tests failed"
+              exit 1
+            fi
+            echo "✅ All tests passed (including macOS)"
+          else
+            echo "✅ All tests passed (macOS skipped - no changes, ran this week)"
           fi
