@@ -25,12 +25,6 @@ PLAYBOOK="$1"
 INVENTORY="$2"
 EXTRA_VARS="${3:-}"
 
-# Build extra vars argument if provided
-EXTRA_VARS_ARG=""
-if [ -n "$EXTRA_VARS" ]; then
-    EXTRA_VARS_ARG="-e $EXTRA_VARS"
-fi
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ANSIBLE_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
@@ -52,9 +46,18 @@ if [ ! -f "$INVENTORY" ]; then
     exit 1
 fi
 
+# Build command with optional extra vars
+run_playbook() {
+    if [ -n "$EXTRA_VARS" ]; then
+        ansible-playbook "$PLAYBOOK" -i "$INVENTORY" -e "$EXTRA_VARS" "$@"
+    else
+        ansible-playbook "$PLAYBOOK" -i "$INVENTORY" "$@"
+    fi
+}
+
 # First run
 echo -e "${YELLOW}>>> First run (applying changes)...${NC}"
-if ! ansible-playbook "$PLAYBOOK" -i "$INVENTORY" $EXTRA_VARS_ARG; then
+if ! run_playbook; then
     echo -e "${RED}❌ First run FAILED${NC}"
     exit 1
 fi
@@ -64,7 +67,7 @@ echo -e "${YELLOW}>>> Second run (testing idempotency)...${NC}"
 
 # Second run - capture output
 OUTPUT=$(mktemp)
-if ! ansible-playbook "$PLAYBOOK" -i "$INVENTORY" $EXTRA_VARS_ARG | tee "$OUTPUT"; then
+if ! run_playbook | tee "$OUTPUT"; then
     echo -e "${RED}❌ Second run FAILED${NC}"
     rm -f "$OUTPUT"
     exit 1
