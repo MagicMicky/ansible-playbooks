@@ -15,6 +15,7 @@
   stat:
     path: "{{ zinit_home }}/zinit.git"
   become: yes
+  become_user: "{{ target_user }}"
   register: zinit_installation
 
 - name: Clone zinit repository
