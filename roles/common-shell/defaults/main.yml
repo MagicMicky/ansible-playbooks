@@ -7,6 +7,8 @@
 #       (e.g., /home/<user> on Linux, /Users/<user> on macOS)
 target_user: "{{ ansible_user_id }}"
 target_home: "{{ ansible_env.HOME }}"
+# Target group: on macOS use 'staff', on Linux use the username
+target_group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
 
 # Machine profile: personal, pro, server, wsl
 machine_profile: personal

@@ -36,14 +36,16 @@
     path: "{{ target_home }}/.local/bin"
     state: directory
     owner: "{{ target_user }}"
-    group: "{{ target_user }}"
+    group: "{{ target_group }}"
     mode: '0755'
   become: yes
+  become_user: "{{ target_user }}"
 
 - name: Check if fzf is installed
   stat:
     path: "{{ target_home }}/.fzf/bin/fzf"
   become: yes
+  become_user: "{{ target_user }}"
   register: fzf_binary
 
 - name: Install fzf with shell integration (Linux)
@@ -62,6 +64,7 @@
   stat:
     path: "{{ target_home }}/.local/bin/zoxide"
   become: yes
+  become_user: "{{ target_user }}"
   register: zoxide_binary
 
 - name: Install zoxide (Linux)

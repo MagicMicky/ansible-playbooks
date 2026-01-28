@@ -6,14 +6,16 @@
     path: "{{ zinit_home }}"
     state: directory
     owner: "{{ target_user }}"
-    group: "{{ target_user }}"
+    group: "{{ target_group }}"
     mode: '0755'
   become: yes
+  become_user: "{{ target_user }}"
 
 - name: Check if zinit is already installed
   stat:
     path: "{{ zinit_home }}/zinit.git"
   become: yes
+  become_user: "{{ target_user }}"
   register: zinit_installation
 
 - name: Clone zinit repository

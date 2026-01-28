@@ -21,3 +21,8 @@ all:
     dotfiles_dest: "{{ ansible_env.HOME }}/dotfiles-test"
     dotfiles_repo_url: "https://github.com/MagicMicky/dotfiles.git"
     dotfiles_branch: master
+
+    # Override server_users for CI (use runner user instead of real users)
+    server_users:
+      - name: "{{ ansible_user_id }}"
+        shell: /bin/zsh
