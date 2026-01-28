@@ -125,29 +125,41 @@ git pull origin main
 git checkout -b claude/<description>
 ```
 
-### Commits and Pushes
-- Make small, focused commits after each logical unit of work
-- Use conventional commits: `fix:`, `feat:`, `docs:`, `refactor:`, `test:`, `chore:`
-- **Push regularly** to preserve work and get CI feedback (CI is our main validation)
-- Run `make test-syntax` before pushing (fast sanity check)
+### Commit → Push → PR → CI Workflow
 
-```bash
-git add <specific-files>
-git commit -m "feat: add validation for backup paths"
-git push -u origin claude/<description>
-```
+**REQUIRED**: When the user asks you to commit, push, or make changes, you MUST complete this entire workflow. Do NOT stop after pushing.
 
-### Pull Requests
-- **Always create a PR after pushing** and provide the PR link
-- **Use `ci-monitor` agent** to track the CI run (see CI/CD section)
-- Ensure CI passes before requesting merge
-- Fix CI failures promptly - don't let them linger
+0. **Branch** - For new features, start from main
+   - Skip this step if adding to an existing feature branch
+   ```bash
+   git checkout main && git pull origin main
+   git checkout -b claude/<description>
+   ```
 
-```bash
-gh pr create --title "feat: description" --body "Summary of changes"
-# Always share the PR URL with the user
-# Then use ci-monitor agent to track CI status
-```
+1. **Commit** - Make small, focused commits
+   - Use conventional commits: `fix:`, `feat:`, `docs:`, `refactor:`, `test:`, `chore:`
+   - Run `make test-syntax` before committing (fast sanity check)
+   ```bash
+   git add <specific-files>
+   git commit -m "feat: add validation for backup paths"
+   ```
+
+2. **Push** - Push to remote
+   ```bash
+   git push -u origin claude/<description>
+   ```
+
+3. **Create PR** - REQUIRED after every push (if PR doesn't exist)
+   ```bash
+   gh pr create --title "feat: description" --body "Summary of changes"
+   ```
+   - Provide the PR URL to the user
+
+4. **Monitor CI** - REQUIRED after creating/updating PR
+   - Use the `ci-monitor` agent to track the CI run
+   - Fix CI failures promptly - don't let them linger
+
+**Do NOT consider the task complete until all 4 steps are done.**
 
 ## Documentation
 
