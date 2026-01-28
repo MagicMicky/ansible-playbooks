@@ -13,6 +13,7 @@
     group: "{{ target_group }}"
     mode: '0755'
   become: yes
+  become_user: "{{ target_user }}"
 
 - name: Ensure .config/shell directory exists
   file:
@@ -22,6 +23,7 @@
     group: "{{ target_group }}"
     mode: '0755'
   become: yes
+  become_user: "{{ target_user }}"
 
 - name: Ensure .config/bat directory exists
   file:
@@ -31,6 +33,7 @@
     group: "{{ target_group }}"
     mode: '0755'
   become: yes
+  become_user: "{{ target_user }}"
 
 - name: Ensure .config/bat/themes directory exists
   file:
@@ -40,6 +43,7 @@
     group: "{{ target_group }}"
     mode: '0755'
   become: yes
+  become_user: "{{ target_user }}"
 
 - name: Detect server type from hostname
   set_fact:
@@ -77,6 +81,7 @@
     group: "{{ target_group }}"
     mode: '0644'
   become: yes
+  become_user: "{{ target_user }}"
 
 - name: Download Catppuccin Mocha bat theme
   get_url:
@@ -86,6 +91,7 @@
     group: "{{ target_group }}"
     mode: '0644'
   become: yes
+  become_user: "{{ target_user }}"
   register: bat_theme_download
   when: not ansible_check_mode
 
@@ -113,6 +119,7 @@
     group: "{{ target_group }}"
     mode: '0644'
   become: yes
+  become_user: "{{ target_user }}"
 
 - name: Set machine type marker (for documentation/debugging)
   copy:
@@ -122,6 +129,7 @@
     group: "{{ target_group }}"
     mode: '0644'
   become: yes
+  become_user: "{{ target_user }}"
   when: machine_profile is defined
 
 - name: Set pro profile marker (work laptop - for documentation/debugging)
@@ -132,6 +140,7 @@
     group: "{{ target_group }}"
     mode: '0644'
   become: yes
+  become_user: "{{ target_user }}"
   when: machine_profile == "work"
 
 - name: Check if dotfiles repository exists
@@ -148,6 +157,7 @@
     group: "{{ target_group }}"
     mode: '0755'
   become: yes
+  become_user: "{{ target_user }}"
   when:
     - dotfiles_repo_url is defined
     - dotfiles_repo_url != ""
@@ -192,6 +202,7 @@
     group: "{{ target_group }}"
     mode: preserve
   become: yes
+  become_user: "{{ target_user }}"
   when:
     - existing_zshrc.stat.exists
     - not existing_zshrc.stat.islnk  # Only backup if it's NOT already a symlink
@@ -215,6 +226,7 @@
     group: "{{ target_group }}"
     force: yes
   become: yes
+  become_user: "{{ target_user }}"
 
 - name: Skip global compinit on Debian/Ubuntu (saves ~400ms)
   blockinfile:
@@ -228,6 +240,7 @@
       # We run our own cached compinit in .zshrc
       skip_global_compinit=1
   become: yes
+  become_user: "{{ target_user }}"
   when: is_debian
 
 - name: Ensure .zsh.d directory exists
@@ -238,6 +251,7 @@
     group: "{{ target_group }}"
     mode: '0755'
   become: yes
+  become_user: "{{ target_user }}"
 
 - name: Symlink core zsh config files to .zsh.d
   file:
@@ -248,6 +262,7 @@
     group: "{{ target_group }}"
     force: yes
   become: yes
+  become_user: "{{ target_user }}"
   loop:
     - 01-zinit.zsh
     - 10-path.zsh
@@ -265,6 +280,7 @@
     group: "{{ target_group }}"
     force: yes
   become: yes
+  become_user: "{{ target_user }}"
   loop:
     - plugins.zsh
     - config.zsh
@@ -278,6 +294,7 @@
     group: "{{ target_group }}"
     mode: '0644'
   become: yes
+  become_user: "{{ target_user }}"
 
 - name: Include set-zsh-shell tasks
   include_tasks: set-zsh-shell.yml

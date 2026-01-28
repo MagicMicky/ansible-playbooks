@@ -9,6 +9,7 @@
     group: "{{ target_group }}"
     mode: '0755'
   become: yes
+  become_user: "{{ target_user }}"
 
 - name: Check if zinit is already installed
   stat:
