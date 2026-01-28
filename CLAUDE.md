@@ -129,6 +129,13 @@ git checkout -b claude/<description>
 
 **REQUIRED**: When the user asks you to commit, push, or make changes, you MUST complete this entire workflow. Do NOT stop after pushing.
 
+0. **Branch** - For new features, start from main
+   - Skip this step if adding to an existing feature branch
+   ```bash
+   git checkout main && git pull origin main
+   git checkout -b claude/<description>
+   ```
+
 1. **Commit** - Make small, focused commits
    - Use conventional commits: `fix:`, `feat:`, `docs:`, `refactor:`, `test:`, `chore:`
    - Run `make test-syntax` before committing (fast sanity check)
