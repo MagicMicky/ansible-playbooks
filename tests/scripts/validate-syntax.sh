@@ -22,8 +22,8 @@ fi
 FAILED=0
 PASSED=0
 
-# Find all playbook YAML files (excluding vars directories)
-PLAYBOOKS=$(find "${ANSIBLE_DIR}/playbooks" -name "*.yml" -type f -not -path "*/vars/*" 2>/dev/null || true)
+# Find all playbook YAML files (excluding vars and tasks directories)
+PLAYBOOKS=$(find "${ANSIBLE_DIR}/playbooks" -name "*.yml" -type f -not -path "*/vars/*" -not -path "*/tasks/*" 2>/dev/null || true)
 
 if [ -z "$PLAYBOOKS" ]; then
     echo "ERROR: No playbooks found in ${ANSIBLE_DIR}/playbooks"
