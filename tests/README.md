@@ -173,7 +173,7 @@ docker compose build
 docker compose up -d
 
 # 5. Run tests inside container
-docker compose exec ubuntu-test ./tests/scripts/run-all-tests.sh
+docker compose exec wsl-test ./tests/scripts/run-all-tests.sh
 
 # 6. Stop containers when done
 docker compose down
@@ -185,11 +185,10 @@ docker compose down
 
 ### Container Architecture
 
-Three specialized containers for different testing scenarios:
+Two specialized containers for different testing scenarios:
 
 | Container | Purpose | Environment Variables |
 |-----------|---------|----------------------|
-| `ubuntu-test` | General Ubuntu testing | Standard Ubuntu 22.04 |
 | `wsl-test` | WSL playbook simulation | `WSL_DISTRO_NAME=Ubuntu-22.04` |
 | `server-test` | Server playbook testing | `hostname=dev-test-01` |
 
@@ -213,14 +212,15 @@ cd tests/docker
 docker compose up -d
 
 # Execute commands in containers
-docker compose exec ubuntu-test bash                  # Interactive shell
+docker compose exec wsl-test bash                    # Interactive shell (WSL)
+docker compose exec server-test bash                 # Interactive shell (Server)
 docker compose exec -T wsl-test <command>            # Run command directly
 
 # Test specific playbook
 docker compose exec wsl-test ansible-playbook playbooks/wsl/setup.yml -i tests/inventories/wsl.yml
 
 # Check container logs
-docker compose logs ubuntu-test
+docker compose logs wsl-test
 
 # Stop containers
 docker compose down
@@ -544,7 +544,7 @@ make test-syntax           # Syntax validation only
 make test-docker-build     # Build Docker containers
 make test-docker-up        # Start Docker containers
 make test-docker-down      # Stop Docker containers
-make test-docker-shell     # Open shell in ubuntu-test container
+make test-shell            # Open shell in wsl-test container
 make test-wsl              # Test WSL playbook
 make test-server           # Test server playbooks
 make test-idempotency      # Test idempotency
@@ -595,7 +595,7 @@ docker ps
 
 # View container logs
 cd tests/docker
-docker compose logs ubuntu-test
+docker compose logs wsl-test
 
 # Rebuild containers
 docker compose build --no-cache
@@ -618,7 +618,7 @@ sudo chown -R $USER:$USER .
 ```bash
 # Rebuild container (Ansible should be in Dockerfile)
 cd tests/docker
-docker compose build --no-cache ubuntu-test
+docker compose build --no-cache wsl-test
 ```
 
 ### Playbook Test Failures
@@ -813,7 +813,7 @@ make test-docker-build
 make test-wsl
 
 # 4. Review output
-docker compose -f tests/docker/docker-compose.yml logs ubuntu-test
+docker compose -f tests/docker/docker-compose.yml logs wsl-test
 
 # 5. Iterate until tests pass
 
@@ -905,11 +905,10 @@ Common causes:
 
 ---
 
-**Testing Infrastructure Status**: ✅ Complete (Phase 3 in progress)
+**Testing Infrastructure Status**: ✅ Complete
 
 **Test Count**: 19 tests (WSL: 9, Server: 9, Syntax: 1)
 
-**Last Updated**: 2025-11-16
+**Last Updated**: 2026-01-28
 
 For deployment procedures, see `STATUS.md` and main `README.md`.
-For improvement roadmap, see `TESTING_IMPROVEMENTS.md`.

@@ -2,6 +2,35 @@
 
 Guidance for Claude Code when working in the ansible-playbooks repository.
 
+## BEFORE MAKING ANY CHANGES
+
+Before editing, writing, or deleting any file, you MUST:
+
+1. **Check your branch** - Are you on a feature branch?
+   ```bash
+   git branch --show-current
+   ```
+   If on `main` or wrong branch:
+   ```bash
+   git checkout main && git pull origin main
+   git checkout -b claude/<brief-description>
+   ```
+
+2. **After making changes** - Complete the FULL workflow:
+   - `make test-syntax` (fast sanity check)
+   - `git add <specific-files>` + `git commit -m "type: description"`
+   - `git push -u origin <branch>`
+   - `gh pr create` (if PR doesn't exist) - **provide PR URL to user**
+   - Use `ci-monitor` agent to track CI
+
+3. **Do NOT stop early** - Task is incomplete until PR exists and CI is monitored
+
+**This applies when user asks to:** fix, update, change, remove, add, refactor, clean up, or modify anything.
+
+See [Git Workflow](#git-workflow) for detailed steps and commit conventions.
+
+---
+
 ## Project Overview
 
 Ansible automation for shell configuration and system setup across multiple machine types. Deploys a modern shell stack (Zinit, Starship, fzf, zoxide) with DRY principles.
@@ -114,52 +143,40 @@ gh run watch <RUN_ID>                    # Wait for completion
 ## Git Workflow
 
 ### Branch Strategy
-- **New features**: Create branch with format `claude/<brief-description>`
+- **New features**: Create branch from main with format `claude/<brief-description>`
 - **Small fixes**: Can be committed to an existing feature branch
 - **Never commit directly to `main`**
 
-```bash
-# For new features
-git checkout main
-git pull origin main
-git checkout -b claude/<description>
-```
-
 ### Commit → Push → PR → CI Workflow
 
-**REQUIRED**: When the user asks you to commit, push, or make changes, you MUST complete this entire workflow. Do NOT stop after pushing.
-
-0. **Branch** - For new features, start from main
-   - Skip this step if adding to an existing feature branch
+1. **Branch** - For new features, start from main
    ```bash
    git checkout main && git pull origin main
    git checkout -b claude/<description>
    ```
 
-1. **Commit** - Make small, focused commits
+2. **Commit** - Make small, focused commits
    - Use conventional commits: `fix:`, `feat:`, `docs:`, `refactor:`, `test:`, `chore:`
-   - Run `make test-syntax` before committing (fast sanity check)
+   - Run `make test-syntax` before committing
    ```bash
    git add <specific-files>
    git commit -m "feat: add validation for backup paths"
    ```
 
-2. **Push** - Push to remote
+3. **Push** - Push to remote
    ```bash
    git push -u origin claude/<description>
    ```
 
-3. **Create PR** - REQUIRED after every push (if PR doesn't exist)
+4. **Create PR** - REQUIRED after every push (if PR doesn't exist)
    ```bash
    gh pr create --title "feat: description" --body "Summary of changes"
    ```
    - Provide the PR URL to the user
 
-4. **Monitor CI** - REQUIRED after creating/updating PR
+5. **Monitor CI** - REQUIRED after creating/updating PR
    - Use the `ci-monitor` agent to track the CI run
-   - Fix CI failures promptly - don't let them linger
-
-**Do NOT consider the task complete until all 4 steps are done.**
+   - Fix CI failures promptly
 
 ## Documentation
 

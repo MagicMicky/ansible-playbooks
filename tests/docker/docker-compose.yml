@@ -1,19 +1,4 @@
 services:
-  # Standard Ubuntu test environment
-  ubuntu-test:
-    build:
-      context: .
-      dockerfile: Dockerfile.ubuntu
-    image: ansible-playbooks-test:ubuntu
-    container_name: ansible-test-ubuntu
-    volumes:
-      - ../../:/ansible:rw
-    working_dir: /ansible
-    command: tail -f /dev/null  # Keep container running
-    environment:
-      - ANSIBLE_FORCE_COLOR=1
-      - ANSIBLE_HOST_KEY_CHECKING=False
-
   # WSL simulation environment
   wsl-test:
     build:
