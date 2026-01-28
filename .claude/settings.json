@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh run list:*)",
+      "Bash(gh run:*)",
+      "Bash(gh api:*)",
+      "Bash(gh pr create:*)"
+    ],
+    "deny": [
+      "Bash(make mac-personal*)",
+      "Bash(make mac-work*)",
+      "Bash(make wsl)",
+      "Bash(make server*)",
+      "Bash(ansible-playbook*-i inventories/localhost*)"
+    ]
+  }
+}
