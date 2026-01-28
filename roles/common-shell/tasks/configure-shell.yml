@@ -10,7 +10,7 @@
     path: "{{ target_home }}/.config"
     state: directory
     owner: "{{ target_user }}"
-    group: "{{ target_user }}"
+    group: "{{ target_group }}"
     mode: '0755'
   become: yes
 
@@ -19,7 +19,7 @@
     path: "{{ target_home }}/.config/shell"
     state: directory
     owner: "{{ target_user }}"
-    group: "{{ target_user }}"
+    group: "{{ target_group }}"
     mode: '0755'
   become: yes
 
@@ -28,7 +28,7 @@
     path: "{{ target_home }}/.config/bat"
     state: directory
     owner: "{{ target_user }}"
-    group: "{{ target_user }}"
+    group: "{{ target_group }}"
     mode: '0755'
   become: yes
 
@@ -37,7 +37,7 @@
     path: "{{ target_home }}/.config/bat/themes"
     state: directory
     owner: "{{ target_user }}"
-    group: "{{ target_user }}"
+    group: "{{ target_group }}"
     mode: '0755'
   become: yes
 
@@ -74,7 +74,7 @@
     src: starship.toml.j2
     dest: "{{ target_home }}/.config/starship.toml"
     owner: "{{ target_user }}"
-    group: "{{ target_user }}"
+    group: "{{ target_group }}"
     mode: '0644'
   become: yes
 
@@ -83,7 +83,7 @@
     url: "https://raw.githubusercontent.com/catppuccin/bat/main/themes/Catppuccin%20Mocha.tmTheme"
     dest: "{{ target_home }}/.config/bat/themes/Catppuccin Mocha.tmTheme"
     owner: "{{ target_user }}"
-    group: "{{ target_user }}"
+    group: "{{ target_group }}"
     mode: '0644'
   become: yes
   register: bat_theme_download
@@ -110,7 +110,7 @@
     src: shell-theme.zsh.j2
     dest: "{{ target_home }}/.config/shell/theme.zsh"
     owner: "{{ target_user }}"
-    group: "{{ target_user }}"
+    group: "{{ target_group }}"
     mode: '0644'
   become: yes
 
@@ -119,7 +119,7 @@
     content: "{{ machine_profile }}"
     dest: "{{ machine_type_file }}"
     owner: "{{ target_user }}"
-    group: "{{ target_user }}"
+    group: "{{ target_group }}"
     mode: '0644'
   become: yes
   when: machine_profile is defined
@@ -129,7 +129,7 @@
     content: ""
     dest: "{{ enable_pro_file }}"
     owner: "{{ target_user }}"
-    group: "{{ target_user }}"
+    group: "{{ target_group }}"
     mode: '0644'
   become: yes
   when: machine_profile == "work"
@@ -145,7 +145,7 @@
     path: "{{ dotfiles_dest | dirname }}"
     state: directory
     owner: "{{ target_user }}"
-    group: "{{ target_user }}"
+    group: "{{ target_group }}"
     mode: '0755'
   become: yes
   when:
@@ -189,7 +189,7 @@
     dest: "{{ target_home }}/.zshrc.backup-{{ ansible_date_time.epoch }}"
     remote_src: yes
     owner: "{{ target_user }}"
-    group: "{{ target_user }}"
+    group: "{{ target_group }}"
     mode: preserve
   become: yes
   when:
@@ -212,7 +212,7 @@
     dest: "{{ target_home }}/.zshrc"
     state: link
     owner: "{{ target_user }}"
-    group: "{{ target_user }}"
+    group: "{{ target_group }}"
     force: yes
   become: yes
 
@@ -221,7 +221,7 @@
     path: "{{ target_home }}/.zshenv"
     create: yes
     owner: "{{ target_user }}"
-    group: "{{ target_user }}"
+    group: "{{ target_group }}"
     marker: "# {mark} ANSIBLE MANAGED BLOCK - COMPINIT"
     block: |
       # Skip Ubuntu/Debian's global compinit in /etc/zsh/zshrc
@@ -235,7 +235,7 @@
     path: "{{ target_home }}/.zsh.d"
     state: directory
     owner: "{{ target_user }}"
-    group: "{{ target_user }}"
+    group: "{{ target_group }}"
     mode: '0755'
   become: yes
 
@@ -245,7 +245,7 @@
     dest: "{{ target_home }}/.zsh.d/{{ item }}"
     state: link
     owner: "{{ target_user }}"
-    group: "{{ target_user }}"
+    group: "{{ target_group }}"
     force: yes
   become: yes
   loop:
@@ -262,7 +262,7 @@
     dest: "{{ target_home }}/.zsh.d/{{ item }}"
     state: link
     owner: "{{ target_user }}"
-    group: "{{ target_user }}"
+    group: "{{ target_group }}"
     force: yes
   become: yes
   loop:
@@ -275,7 +275,7 @@
     content: "{{ machine_profile }}"
     dest: "{{ target_home }}/.zsh.d/.machine-type"
     owner: "{{ target_user }}"
-    group: "{{ target_user }}"
+    group: "{{ target_group }}"
     mode: '0644'
   become: yes
 

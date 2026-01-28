@@ -184,10 +184,14 @@ jobs:
         run: ansible-galaxy install -r requirements.yml --ignore-errors
 
       - name: Run playbook (check mode)
-        run: ansible-playbook playbooks/servers/setup.yml -i tests/inventories/ubuntu.yml --check
+        run: |
+          ansible-playbook playbooks/servers/setup.yml -i tests/inventories/ubuntu.yml --check \
+            -e '{"server_users": [{"name": "'"$(whoami)"'", "shell": "/bin/zsh"}]}'
 
       - name: Run playbook (apply)
-        run: ansible-playbook playbooks/servers/setup.yml -i tests/inventories/ubuntu.yml
+        run: |
+          ansible-playbook playbooks/servers/setup.yml -i tests/inventories/ubuntu.yml \
+            -e '{"server_users": [{"name": "'"$(whoami)"'", "shell": "/bin/zsh"}]}'
 
       - name: Validate shell configuration
         run: ./tests/scripts/validate-shell.sh
@@ -250,7 +254,9 @@ jobs:
         run: ansible-galaxy install -r requirements.yml --ignore-errors
 
       - name: Test idempotency
-        run: ./tests/scripts/test-idempotency.sh playbooks/servers/setup.yml tests/inventories/ubuntu.yml
+        run: |
+          ./tests/scripts/test-idempotency.sh playbooks/servers/setup.yml tests/inventories/ubuntu.yml \
+            '{"server_users": [{"name": "'"$(whoami)"'", "shell": "/bin/zsh"}]}'
 
   test-macos:
     name: Test Mac Playbook

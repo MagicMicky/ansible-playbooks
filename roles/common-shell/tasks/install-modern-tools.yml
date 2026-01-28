@@ -36,7 +36,7 @@
     path: "{{ target_home }}/.local/bin"
     state: directory
     owner: "{{ target_user }}"
-    group: "{{ target_user }}"
+    group: "{{ target_group }}"
     mode: '0755'
   become: yes
 

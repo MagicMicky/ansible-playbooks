@@ -12,16 +12,24 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 <playbook> <inventory>"
+    echo "Usage: $0 <playbook> <inventory> [extra-vars]"
     echo ""
     echo "Examples:"
     echo "  $0 playbooks/wsl/setup.yml tests/inventories/wsl.yml"
     echo "  $0 playbooks/servers/setup.yml tests/inventories/ubuntu.yml"
+    echo "  $0 playbooks/servers/setup.yml tests/inventories/ubuntu.yml '{\"server_users\": [...]}'"
     exit 1
 fi
 
 PLAYBOOK="$1"
 INVENTORY="$2"
+EXTRA_VARS="${3:-}"
+
+# Build extra vars argument if provided
+EXTRA_VARS_ARG=""
+if [ -n "$EXTRA_VARS" ]; then
+    EXTRA_VARS_ARG="-e $EXTRA_VARS"
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ANSIBLE_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
@@ -46,7 +54,7 @@ fi
 
 # First run
 echo -e "${YELLOW}>>> First run (applying changes)...${NC}"
-if ! ansible-playbook "$PLAYBOOK" -i "$INVENTORY"; then
+if ! ansible-playbook "$PLAYBOOK" -i "$INVENTORY" $EXTRA_VARS_ARG; then
     echo -e "${RED}❌ First run FAILED${NC}"
     exit 1
 fi
@@ -56,7 +64,7 @@ echo -e "${YELLOW}>>> Second run (testing idempotency)...${NC}"
 
 # Second run - capture output
 OUTPUT=$(mktemp)
-if ! ansible-playbook "$PLAYBOOK" -i "$INVENTORY" | tee "$OUTPUT"; then
+if ! ansible-playbook "$PLAYBOOK" -i "$INVENTORY" $EXTRA_VARS_ARG | tee "$OUTPUT"; then
     echo -e "${RED}❌ Second run FAILED${NC}"
     rm -f "$OUTPUT"
     exit 1
