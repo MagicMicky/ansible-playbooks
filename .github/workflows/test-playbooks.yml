@@ -8,6 +8,71 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Determine which tests need to run based on changed files
+  check-changes:
+    name: Check Changed Paths
+    runs-on: ubuntu-latest
+    outputs:
+      run_wsl: ${{ steps.changes.outputs.run_wsl }}
+      run_servers: ${{ steps.changes.outputs.run_servers }}
+      run_macos: ${{ steps.changes.outputs.run_macos }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed paths
+        id: changes
+        run: |
+          # Define path patterns for each platform
+          WSL_PATHS='^(playbooks/wsl/|roles/common-shell/)'
+          SERVER_PATHS='^(playbooks/servers/|roles/common-shell/)'
+          MAC_PATHS='^(playbooks/mac/|roles/common-shell/|roles/mac-system/|roles/app-config/)'
+
+          # Get changed files
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            # Manual trigger: run everything
+            echo "Manual trigger - running all tests"
+            echo "run_wsl=true" >> $GITHUB_OUTPUT
+            echo "run_servers=true" >> $GITHUB_OUTPUT
+            echo "run_macos=true" >> $GITHUB_OUTPUT
+            exit 0
+          else
+            CHANGED=$(git diff --name-only HEAD~1)
+          fi
+
+          echo "Changed files:"
+          echo "$CHANGED"
+          echo ""
+
+          # Check each platform
+          if echo "$CHANGED" | grep -qE "$WSL_PATHS"; then
+            echo "run_wsl=true" >> $GITHUB_OUTPUT
+            echo "WSL tests: will run"
+          else
+            echo "run_wsl=false" >> $GITHUB_OUTPUT
+            echo "WSL tests: skipped (no relevant changes)"
+          fi
+
+          if echo "$CHANGED" | grep -qE "$SERVER_PATHS"; then
+            echo "run_servers=true" >> $GITHUB_OUTPUT
+            echo "Server tests: will run"
+          else
+            echo "run_servers=false" >> $GITHUB_OUTPUT
+            echo "Server tests: skipped (no relevant changes)"
+          fi
+
+          if echo "$CHANGED" | grep -qE "$MAC_PATHS"; then
+            echo "run_macos=true" >> $GITHUB_OUTPUT
+            echo "macOS tests: will run"
+          else
+            echo "run_macos=false" >> $GITHUB_OUTPUT
+            echo "macOS tests: skipped (no relevant changes)"
+          fi
+
   syntax-check:
     name: Syntax Validation
     runs-on: ubuntu-latest
@@ -27,8 +92,6 @@ jobs:
 
       - name: Install Galaxy dependencies
         run: ansible-galaxy install -r requirements.yml --ignore-errors
-        # Note: --ignore-errors allows work-tasks (private repo) to fail
-        # We only test public playbooks (wsl, servers) in CI
 
       - name: Run syntax check
         run: ./tests/scripts/validate-syntax.sh
@@ -52,24 +115,16 @@ jobs:
 
       - name: Install Galaxy dependencies
         run: ansible-galaxy install -r requirements-ci.yml
-        # Note: Using requirements-ci.yml which excludes private work-tasks role
-        # We only lint public playbooks (wsl, servers, mac/personal.yml) in CI
 
       - name: Run ansible-lint
         run: |
           ansible-lint playbooks/wsl/ playbooks/servers/ playbooks/mac/personal.yml --force-color --parseable
-          # Using .ansible-lint config: warnings allowed, errors fail the build
-          # Note: Excludes playbooks/mac/work.yml (requires private work-tasks role)
 
-  test-ubuntu:
-    name: Test Playbooks in Ubuntu
+  test-wsl:
+    name: Test WSL Playbook
     runs-on: ubuntu-latest
-    needs: syntax-check
-    strategy:
-      matrix:
-        playbook:
-          - playbooks/wsl/setup.yml
-          - playbooks/servers/setup.yml
+    needs: [syntax-check, check-changes]
+    if: needs.check-changes.outputs.run_wsl == 'true'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -91,36 +146,21 @@ jobs:
 
       - name: Install Galaxy dependencies
         run: ansible-galaxy install -r requirements.yml --ignore-errors
-        # Note: --ignore-errors allows work-tasks (private repo) to fail
-        # We only test public playbooks (wsl, servers) in CI
 
       - name: Run playbook (check mode)
-        run: |
-          if [[ "${{ matrix.playbook }}" == *"wsl"* ]]; then
-            ansible-playbook ${{ matrix.playbook }} -i tests/inventories/wsl.yml --check
-          else
-            ansible-playbook ${{ matrix.playbook }} -i tests/inventories/ubuntu.yml --check
-          fi
+        run: ansible-playbook playbooks/wsl/setup.yml -i tests/inventories/wsl.yml --check
 
       - name: Run playbook (apply)
-        run: |
-          if [[ "${{ matrix.playbook }}" == *"wsl"* ]]; then
-            ansible-playbook ${{ matrix.playbook }} -i tests/inventories/wsl.yml
-          else
-            ansible-playbook ${{ matrix.playbook }} -i tests/inventories/ubuntu.yml
-          fi
+        run: ansible-playbook playbooks/wsl/setup.yml -i tests/inventories/wsl.yml
 
       - name: Validate shell configuration
         run: ./tests/scripts/validate-shell.sh
 
-  test-idempotency:
-    name: Test Playbook Idempotency
+  test-servers:
+    name: Test Server Playbook
     runs-on: ubuntu-latest
-    needs: test-ubuntu
-    strategy:
-      matrix:
-        playbook:
-          - playbooks/wsl/setup.yml
+    needs: [syntax-check, check-changes]
+    if: needs.check-changes.outputs.run_servers == 'true'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -142,107 +182,51 @@ jobs:
 
       - name: Install Galaxy dependencies
         run: ansible-galaxy install -r requirements.yml --ignore-errors
-        # Note: --ignore-errors allows work-tasks (private repo) to fail
-        # We only test public playbooks (wsl, servers) in CI
 
-      - name: Test idempotency
-        run: |
-          ./tests/scripts/test-idempotency.sh ${{ matrix.playbook }} tests/inventories/wsl.yml
+      - name: Run playbook (check mode)
+        run: ansible-playbook playbooks/servers/setup.yml -i tests/inventories/ubuntu.yml --check
 
-  # Determines whether macOS tests should run based on:
-  # - File changes (mac playbooks or roles)
-  # - Weekly cache (ensure tests run at least once per week)
-  check-macos-needed:
-    name: Check if macOS Tests Needed
+      - name: Run playbook (apply)
+        run: ansible-playbook playbooks/servers/setup.yml -i tests/inventories/ubuntu.yml
+
+      - name: Validate shell configuration
+        run: ./tests/scripts/validate-shell.sh
+
+  test-wsl-idempotency:
+    name: Test WSL Idempotency
     runs-on: ubuntu-latest
-    outputs:
-      should_run: ${{ steps.decide.outputs.should_run }}
+    needs: [test-wsl, check-changes]
+    if: needs.check-changes.outputs.run_wsl == 'true'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          fetch-depth: 0
+          python-version: '3.10'
 
-      - name: Get current week
-        id: week
-        run: echo "week=$(date +%Y-W%V)" >> $GITHUB_OUTPUT
-
-      - name: Check weekly cache
-        id: cache
-        uses: actions/cache@v4
-        with:
-          path: .macos-test-marker
-          key: macos-tested-${{ steps.week.outputs.week }}
-          lookup-only: true
-
-      - name: Check for mac-related changes
-        id: changes
+      - name: Install Ansible
         run: |
-          # Only mac-specific paths trigger immediate macOS tests:
-          # - playbooks/mac/          (mac playbooks and vars)
-          # - roles/mac-system/       (mac-specific system settings)
-          # - roles/app-config/       (mac app configuration)
-          #
-          # Note: roles/common-shell/ is NOT included here.
-          # It's cross-platform and tested on Ubuntu. Darwin-specific issues
-          # are caught by the weekly fallback run.
-          MAC_PATHS='^(playbooks/mac/|roles/mac-system/|roles/app-config/)'
+          python -m pip install --upgrade pip
+          pip install ansible
 
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E "$MAC_PATHS" || true)
-          else
-            CHANGED=$(git diff --name-only HEAD~1 | grep -E "$MAC_PATHS" || true)
-          fi
-          if [[ -n "$CHANGED" ]]; then
-            echo "mac_changed=true" >> $GITHUB_OUTPUT
-            echo "Changed mac-related files:"
-            echo "$CHANGED"
-          else
-            echo "mac_changed=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Decide if macOS tests should run
-        id: decide
+      - name: Install system dependencies
         run: |
-          echo "Event: ${{ github.event_name }}"
-          echo "Mac files changed: ${{ steps.changes.outputs.mac_changed }}"
-          echo "Cache hit: ${{ steps.cache.outputs.cache-hit }}"
+          sudo apt-get update
+          sudo apt-get install -y zsh git curl wget build-essential
 
-          # Always run on manual trigger
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "Manual trigger - will run"
-            echo "should_run=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
+      - name: Install Galaxy dependencies
+        run: ansible-galaxy install -r requirements.yml --ignore-errors
 
-          # Always run on PRs (if targeting main/develop, which is already filtered)
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            echo "PR - will run"
-            echo "should_run=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          # For pushes: run if mac files changed OR cache miss (weekly)
-          if [[ "${{ steps.changes.outputs.mac_changed }}" == "true" ]]; then
-            echo "Mac files changed - will run"
-            echo "should_run=true" >> $GITHUB_OUTPUT
-          elif [[ "${{ steps.cache.outputs.cache-hit }}" != "true" ]]; then
-            echo "Cache miss (weekly) - will run"
-            echo "should_run=true" >> $GITHUB_OUTPUT
-          else
-            echo "No mac changes and ran this week - skipping"
-            echo "should_run=false" >> $GITHUB_OUTPUT
-          fi
+      - name: Test idempotency
+        run: ./tests/scripts/test-idempotency.sh playbooks/wsl/setup.yml tests/inventories/wsl.yml
 
   test-macos:
-    name: Test Mac Playbooks
+    name: Test Mac Playbook
     runs-on: macos-latest
-    needs: [syntax-check, check-macos-needed]
-    if: needs.check-macos-needed.outputs.should_run == 'true'
-    strategy:
-      matrix:
-        playbook:
-          - playbooks/mac/personal.yml
+    needs: [syntax-check, check-changes]
+    if: needs.check-changes.outputs.run_macos == 'true'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -258,21 +242,16 @@ jobs:
           pip install ansible
 
       - name: Install system dependencies
-        run: |
-          # Install zsh (usually pre-installed on macOS)
-          brew install zsh git wget
+        run: brew install zsh git wget
 
       - name: Install Galaxy dependencies
         run: ansible-galaxy install -r requirements.yml --ignore-errors
-        # Note: --ignore-errors allows work-tasks (private repo) to fail
 
       - name: Run playbook (check mode)
-        run: |
-          ansible-playbook ${{ matrix.playbook }} -i tests/inventories/mac.yml --check
+        run: ansible-playbook playbooks/mac/personal.yml -i tests/inventories/mac.yml --check
 
       - name: Run playbook (apply)
-        run: |
-          ansible-playbook ${{ matrix.playbook }} -i tests/inventories/mac.yml
+        run: ansible-playbook playbooks/mac/personal.yml -i tests/inventories/mac.yml
 
       - name: Validate shell configuration
         run: ./tests/scripts/validate-shell.sh
@@ -289,12 +268,8 @@ jobs:
   test-macos-idempotency:
     name: Test Mac Idempotency
     runs-on: macos-latest
-    needs: [test-macos, check-macos-needed]
-    if: needs.check-macos-needed.outputs.should_run == 'true'
-    strategy:
-      matrix:
-        playbook:
-          - playbooks/mac/personal.yml
+    needs: [test-macos, check-changes]
+    if: needs.check-changes.outputs.run_macos == 'true'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -310,42 +285,18 @@ jobs:
           pip install ansible
 
       - name: Install system dependencies
-        run: |
-          brew install zsh git wget
+        run: brew install zsh git wget
 
       - name: Install Galaxy dependencies
         run: ansible-galaxy install -r requirements.yml --ignore-errors
 
       - name: Test idempotency
-        run: |
-          ./tests/scripts/test-idempotency.sh ${{ matrix.playbook }} tests/inventories/mac.yml
-
-  # Update the weekly cache after successful macOS tests
-  update-macos-cache:
-    name: Update macOS Test Cache
-    runs-on: ubuntu-latest
-    needs: [test-macos, test-macos-idempotency]
-    if: success()
-    steps:
-      - name: Get current week
-        id: week
-        run: echo "week=$(date +%Y-W%V)" >> $GITHUB_OUTPUT
-
-      - name: Create marker file
-        run: |
-          mkdir -p .cache-dir
-          echo "macOS tests passed at $(date -Iseconds)" > .cache-dir/.macos-test-marker
-
-      - name: Save weekly cache
-        uses: actions/cache/save@v4
-        with:
-          path: .cache-dir/.macos-test-marker
-          key: macos-tested-${{ steps.week.outputs.week }}
+        run: ./tests/scripts/test-idempotency.sh playbooks/mac/personal.yml tests/inventories/mac.yml
 
   summary:
     name: Test Summary
     runs-on: ubuntu-latest
-    needs: [syntax-check, ansible-lint, test-ubuntu, test-idempotency, check-macos-needed, test-macos, test-macos-idempotency]
+    needs: [syntax-check, ansible-lint, check-changes, test-wsl, test-servers, test-wsl-idempotency, test-macos, test-macos-idempotency]
     if: always()
     steps:
       - name: Check test results
@@ -355,30 +306,51 @@ jobs:
           echo "Test Results:"
           echo "  Syntax Check: ${{ needs.syntax-check.result }}"
           echo "  Ansible Lint: ${{ needs.ansible-lint.result }}"
-          echo "  Ubuntu Tests: ${{ needs.test-ubuntu.result }}"
-          echo "  Ubuntu Idempotency: ${{ needs.test-idempotency.result }}"
-          echo "  macOS Needed: ${{ needs.check-macos-needed.outputs.should_run }}"
-          echo "  macOS Tests: ${{ needs.test-macos.result }}"
+          echo ""
+          echo "  WSL Tests: ${{ needs.test-wsl.result }} (run: ${{ needs.check-changes.outputs.run_wsl }})"
+          echo "  WSL Idempotency: ${{ needs.test-wsl-idempotency.result }}"
+          echo ""
+          echo "  Server Tests: ${{ needs.test-servers.result }} (run: ${{ needs.check-changes.outputs.run_servers }})"
+          echo ""
+          echo "  macOS Tests: ${{ needs.test-macos.result }} (run: ${{ needs.check-changes.outputs.run_macos }})"
           echo "  macOS Idempotency: ${{ needs.test-macos-idempotency.result }}"
           echo ""
 
-          # Core tests must pass
+          # Syntax and lint must always pass
           if [[ "${{ needs.syntax-check.result }}" != "success" ]] || \
-             [[ "${{ needs.ansible-lint.result }}" != "success" ]] || \
-             [[ "${{ needs.test-ubuntu.result }}" != "success" ]] || \
-             [[ "${{ needs.test-idempotency.result }}" != "success" ]]; then
-            echo "❌ Core tests failed"
+             [[ "${{ needs.ansible-lint.result }}" != "success" ]]; then
+            echo "❌ Syntax/lint checks failed"
             exit 1
           fi
 
-          # macOS tests: must pass if they ran, skip is OK
-          if [[ "${{ needs.check-macos-needed.outputs.should_run }}" == "true" ]]; then
+          # Platform tests must pass if they ran (skipped is OK)
+          FAILED=false
+
+          if [[ "${{ needs.check-changes.outputs.run_wsl }}" == "true" ]]; then
+            if [[ "${{ needs.test-wsl.result }}" != "success" ]] || \
+               [[ "${{ needs.test-wsl-idempotency.result }}" != "success" ]]; then
+              echo "❌ WSL tests failed"
+              FAILED=true
+            fi
+          fi
+
+          if [[ "${{ needs.check-changes.outputs.run_servers }}" == "true" ]]; then
+            if [[ "${{ needs.test-servers.result }}" != "success" ]]; then
+              echo "❌ Server tests failed"
+              FAILED=true
+            fi
+          fi
+
+          if [[ "${{ needs.check-changes.outputs.run_macos }}" == "true" ]]; then
             if [[ "${{ needs.test-macos.result }}" != "success" ]] || \
                [[ "${{ needs.test-macos-idempotency.result }}" != "success" ]]; then
               echo "❌ macOS tests failed"
-              exit 1
+              FAILED=true
             fi
-            echo "✅ All tests passed (including macOS)"
-          else
-            echo "✅ All tests passed (macOS skipped - no changes, ran this week)"
           fi
+
+          if [[ "$FAILED" == "true" ]]; then
+            exit 1
+          fi
+
+          echo "✅ All tests passed!"
