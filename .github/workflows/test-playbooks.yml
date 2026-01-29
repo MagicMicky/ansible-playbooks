@@ -159,6 +159,13 @@ jobs:
       - name: Validate shell configuration
         run: ./tests/scripts/validate-shell.sh
 
+      - name: Validate shell functional
+        run: ./tests/scripts/validate-shell-functional.sh
+
+      - name: Track shell performance
+        run: ./tests/scripts/track-performance.sh --check-only
+        continue-on-error: true
+
   test-servers:
     name: Test Server Playbook
     runs-on: ubuntu-latest
@@ -198,6 +205,13 @@ jobs:
 
       - name: Validate shell configuration
         run: ./tests/scripts/validate-shell.sh
+
+      - name: Validate shell functional
+        run: ./tests/scripts/validate-shell-functional.sh
+
+      - name: Track shell performance
+        run: ./tests/scripts/track-performance.sh --check-only
+        continue-on-error: true
 
   test-wsl-idempotency:
     name: Test WSL Idempotency
@@ -294,6 +308,13 @@ jobs:
 
       - name: Validate shell configuration
         run: ./tests/scripts/validate-shell.sh
+
+      - name: Validate shell functional
+        run: ./tests/scripts/validate-shell-functional.sh
+
+      - name: Track shell performance
+        run: ./tests/scripts/track-performance.sh --check-only
+        continue-on-error: true
 
       - name: Validate security
         run: ./tests/scripts/validate-security.sh

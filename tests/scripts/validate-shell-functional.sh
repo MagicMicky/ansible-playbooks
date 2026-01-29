@@ -1,0 +1,206 @@
+#!/usr/bin/env bash
+# Functional validation of shell configuration
+# Tests that shell features actually WORK, not just that files exist
+#
+# This complements validate-shell.sh (installation checks) with functional tests:
+# - Aliases resolve and execute
+# - Tool integrations work (zoxide, fzf)
+# - Zinit plugins loaded
+# - Environment variables set correctly
+
+set -e
+
+# Colors
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+FAILED=0
+PASSED=0
+
+echo -e "${BLUE}╔════════════════════════════════════════════╗${NC}"
+echo -e "${BLUE}║   Shell Functional Validation              ║${NC}"
+echo -e "${BLUE}╚════════════════════════════════════════════╝${NC}"
+echo ""
+
+# Helper to run a test inside zsh
+run_zsh_test() {
+    local name="$1"
+    local test_cmd="$2"
+
+    echo -n "  $name... "
+
+    # Run test in interactive zsh, capture exit code
+    if zsh -i -c "$test_cmd" >/dev/null 2>&1; then
+        echo -e "${GREEN}✓${NC}"
+        PASSED=$((PASSED + 1))
+        return 0
+    else
+        echo -e "${RED}✗${NC}"
+        FAILED=$((FAILED + 1))
+        return 1
+    fi
+}
+
+# Helper for tests that might not apply (e.g., tool not installed)
+run_optional_test() {
+    local name="$1"
+    local prereq="$2"
+    local test_cmd="$3"
+
+    echo -n "  $name... "
+
+    # Check prerequisite first
+    if ! command -v "$prereq" >/dev/null 2>&1; then
+        echo -e "${YELLOW}○ skipped ($prereq not installed)${NC}"
+        return 0
+    fi
+
+    if zsh -i -c "$test_cmd" >/dev/null 2>&1; then
+        echo -e "${GREEN}✓${NC}"
+        PASSED=$((PASSED + 1))
+        return 0
+    else
+        echo -e "${RED}✗${NC}"
+        FAILED=$((FAILED + 1))
+        return 1
+    fi
+}
+
+# =============================================================================
+# 1. Core aliases
+# =============================================================================
+echo "1. Core Aliases"
+
+run_zsh_test "ll alias defined" "type ll >/dev/null 2>&1"
+run_zsh_test "la alias defined" "type la >/dev/null 2>&1"
+run_zsh_test ".. alias defined" "type .. >/dev/null 2>&1"
+
+# Test alias actually works (ll should list files)
+run_zsh_test "ll executes without error" "ll / >/dev/null 2>&1"
+
+echo ""
+
+# =============================================================================
+# 2. Zoxide integration
+# =============================================================================
+echo "2. Zoxide Integration"
+
+run_optional_test "z function available" "zoxide" "type z >/dev/null 2>&1"
+run_optional_test "zi function available" "zoxide" "type zi >/dev/null 2>&1"
+run_optional_test "zoxide initialized" "zoxide" "[[ -n \"\$(zoxide --version 2>/dev/null)\" ]]"
+
+echo ""
+
+# =============================================================================
+# 3. FZF integration
+# =============================================================================
+echo "3. FZF Integration"
+
+run_optional_test "fzf available" "fzf" "type fzf >/dev/null 2>&1"
+# Check if Ctrl-R is bound (fzf history widget)
+run_optional_test "fzf history widget bound" "fzf" "bindkey | grep -q 'fzf-history-widget\\|\\^R.*fzf'"
+
+echo ""
+
+# =============================================================================
+# 4. Zinit plugins
+# =============================================================================
+echo "4. Zinit Plugins"
+
+# Check zinit is loaded
+run_zsh_test "zinit function available" "type zinit >/dev/null 2>&1"
+
+# Check core plugins are loaded (they load async, so check if defined)
+# autosuggestions defines ZSH_AUTOSUGGEST_STRATEGY
+run_zsh_test "autosuggestions plugin loaded" "[[ -n \"\${ZSH_AUTOSUGGEST_STRATEGY+x}\" ]] || zinit list 2>/dev/null | grep -q autosuggestions"
+
+# fast-syntax-highlighting defines FAST_HIGHLIGHT
+run_zsh_test "syntax-highlighting plugin active" "[[ -n \"\${FAST_HIGHLIGHT+x}\" ]] || zinit list 2>/dev/null | grep -q syntax-highlighting"
+
+echo ""
+
+# =============================================================================
+# 5. Environment variables
+# =============================================================================
+echo "5. Environment Variables"
+
+run_zsh_test "EDITOR is set" "[[ -n \"\$EDITOR\" ]]"
+run_zsh_test "LANG includes UTF-8" "[[ \"\$LANG\" == *UTF-8* ]] || [[ \"\$LANG\" == *utf8* ]] || [[ \"\$LC_ALL\" == *UTF-8* ]]"
+
+# Check PATH includes expected directories
+run_zsh_test "~/.local/bin in PATH" "[[ \":\$PATH:\" == *\":$HOME/.local/bin:\"* ]] || [[ \":\$PATH:\" == *\":/root/.local/bin:\"* ]]"
+
+echo ""
+
+# =============================================================================
+# 6. Starship prompt
+# =============================================================================
+echo "6. Starship Prompt"
+
+run_optional_test "starship initialized" "starship" "[[ \"\$PROMPT\" == *starship* ]] || [[ -n \"\$STARSHIP_SHELL\" ]] || type starship_precmd >/dev/null 2>&1"
+run_optional_test "STARSHIP_CONFIG set" "starship" "[[ -n \"\$STARSHIP_CONFIG\" ]]"
+
+echo ""
+
+# =============================================================================
+# 7. Machine type detection
+# =============================================================================
+echo "7. Machine Type"
+
+if [[ -f "$HOME/.zsh.d/.machine-type" ]]; then
+    MACHINE_TYPE=$(cat "$HOME/.zsh.d/.machine-type")
+    echo -e "  Machine profile: ${BLUE}${MACHINE_TYPE}${NC}"
+    PASSED=$((PASSED + 1))
+
+    # Validate it's a known type
+    case "$MACHINE_TYPE" in
+        laptop|pro|server|wsl|personal)
+            echo -e "  ${GREEN}✓${NC} Valid machine type"
+            PASSED=$((PASSED + 1))
+            ;;
+        *)
+            echo -e "  ${YELLOW}⚠${NC} Unknown machine type: $MACHINE_TYPE"
+            ;;
+    esac
+else
+    echo -e "  ${YELLOW}⚠${NC} Machine type marker not found"
+fi
+
+echo ""
+
+# =============================================================================
+# 8. Shell functions
+# =============================================================================
+echo "8. Shell Functions"
+
+# Test mkcd if defined (common function)
+if zsh -i -c "type mkcd >/dev/null 2>&1" 2>/dev/null; then
+    run_zsh_test "mkcd function works" "mkcd /tmp/test-mkcd-$$ && pwd | grep -q test-mkcd && cd .. && rmdir /tmp/test-mkcd-$$"
+else
+    echo -e "  ${YELLOW}○${NC} mkcd not defined (optional)"
+fi
+
+echo ""
+
+# =============================================================================
+# Results
+# =============================================================================
+echo -e "${BLUE}════════════════════════════════════════════${NC}"
+echo "Results: $PASSED passed, $FAILED failed"
+echo ""
+
+if [ $FAILED -gt 0 ]; then
+    echo -e "${RED}❌ Functional validation FAILED${NC}"
+    echo ""
+    echo "Troubleshooting:"
+    echo "  - Check ~/.zsh.d/ symlinks are correct"
+    echo "  - Verify dotfiles were cloned correctly"
+    echo "  - Run 'zsh -i' manually to see errors"
+    exit 1
+else
+    echo -e "${GREEN}✅ Functional validation PASSED${NC}"
+    exit 0
+fi
