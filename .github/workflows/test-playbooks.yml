@@ -160,8 +160,34 @@ jobs:
         run: ./tests/scripts/validate-shell.sh
 
       - name: Track shell performance
-        run: ./tests/scripts/track-performance.sh --check-only
-        continue-on-error: true
+        id: perf
+        run: |
+          mkdir -p test-results
+          ./tests/scripts/track-performance.sh --check-only 2>&1 | tee test-results/wsl-performance.txt
+          # Extract metrics for summary
+          AVG_MS=$(grep "Average startup time" test-results/wsl-performance.txt | grep -oE '[0-9]+' || echo "N/A")
+          echo "avg_ms=$AVG_MS" >> $GITHUB_OUTPUT
+
+      - name: Add performance to job summary
+        if: always()
+        run: |
+          echo "## 🚀 WSL Shell Performance" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f test-results/wsl-performance.txt ]; then
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat test-results/wsl-performance.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Performance test did not run" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload performance results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wsl-performance-results
+          path: test-results/
+          retention-days: 30
 
   test-servers:
     name: Test Server Playbook
@@ -204,8 +230,34 @@ jobs:
         run: ./tests/scripts/validate-shell.sh
 
       - name: Track shell performance
-        run: ./tests/scripts/track-performance.sh --check-only
-        continue-on-error: true
+        id: perf
+        run: |
+          mkdir -p test-results
+          ./tests/scripts/track-performance.sh --check-only 2>&1 | tee test-results/server-performance.txt
+          # Extract metrics for summary
+          AVG_MS=$(grep "Average startup time" test-results/server-performance.txt | grep -oE '[0-9]+' || echo "N/A")
+          echo "avg_ms=$AVG_MS" >> $GITHUB_OUTPUT
+
+      - name: Add performance to job summary
+        if: always()
+        run: |
+          echo "## 🚀 Server Shell Performance" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f test-results/server-performance.txt ]; then
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat test-results/server-performance.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Performance test did not run" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload performance results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-performance-results
+          path: test-results/
+          retention-days: 30
 
   test-wsl-idempotency:
     name: Test WSL Idempotency
@@ -304,8 +356,34 @@ jobs:
         run: ./tests/scripts/validate-shell.sh
 
       - name: Track shell performance
-        run: ./tests/scripts/track-performance.sh --check-only
-        continue-on-error: true
+        id: perf
+        run: |
+          mkdir -p test-results
+          ./tests/scripts/track-performance.sh --check-only 2>&1 | tee test-results/macos-performance.txt
+          # Extract metrics for summary
+          AVG_MS=$(grep "Average startup time" test-results/macos-performance.txt | grep -oE '[0-9]+' || echo "N/A")
+          echo "avg_ms=$AVG_MS" >> $GITHUB_OUTPUT
+
+      - name: Add performance to job summary
+        if: always()
+        run: |
+          echo "## 🚀 macOS Shell Performance" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f test-results/macos-performance.txt ]; then
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat test-results/macos-performance.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Performance test did not run" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload performance results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-performance-results
+          path: test-results/
+          retention-days: 30
 
       - name: Validate security
         run: ./tests/scripts/validate-security.sh
@@ -350,6 +428,39 @@ jobs:
     needs: [syntax-check, ansible-lint, check-changes, test-wsl, test-servers, test-wsl-idempotency, test-servers-idempotency, test-macos, test-macos-idempotency]
     if: always()
     steps:
+      - name: Download performance artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: '*-performance-results'
+          path: performance-results
+          merge-multiple: true
+        continue-on-error: true
+
+      - name: Generate performance summary
+        run: |
+          echo "## 📊 Shell Performance Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform | Startup Time | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------------|--------|" >> $GITHUB_STEP_SUMMARY
+
+          for platform in wsl server macos; do
+            FILE="performance-results/${platform}-performance.txt"
+            if [ -f "$FILE" ]; then
+              AVG=$(grep "Average startup time" "$FILE" | grep -oE '[0-9]+' || echo "N/A")
+              if grep -q "Performance excellent\|Performance acceptable" "$FILE"; then
+                STATUS="✅ Pass"
+              elif grep -q "regression detected" "$FILE"; then
+                STATUS="⚠️ Regression"
+              else
+                STATUS="📊 Measured"
+              fi
+              echo "| ${platform} | ${AVG}ms | ${STATUS} |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "| ${platform} | - | ⏭️ Skipped |" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+          echo "" >> $GITHUB_STEP_SUMMARY
+
       - name: Check test results
         run: |
           echo "::notice::All test jobs completed"
