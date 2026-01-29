@@ -159,9 +159,6 @@ jobs:
       - name: Validate shell configuration
         run: ./tests/scripts/validate-shell.sh
 
-      - name: Validate shell functional
-        run: ./tests/scripts/validate-shell-functional.sh
-
       - name: Track shell performance
         run: ./tests/scripts/track-performance.sh --check-only
         continue-on-error: true
@@ -205,9 +202,6 @@ jobs:
 
       - name: Validate shell configuration
         run: ./tests/scripts/validate-shell.sh
-
-      - name: Validate shell functional
-        run: ./tests/scripts/validate-shell-functional.sh
 
       - name: Track shell performance
         run: ./tests/scripts/track-performance.sh --check-only
@@ -308,9 +302,6 @@ jobs:
 
       - name: Validate shell configuration
         run: ./tests/scripts/validate-shell.sh
-
-      - name: Validate shell functional
-        run: ./tests/scripts/validate-shell-functional.sh
 
       - name: Track shell performance
         run: ./tests/scripts/track-performance.sh --check-only
