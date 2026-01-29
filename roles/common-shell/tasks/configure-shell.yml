@@ -273,7 +273,7 @@
     - 30-aliases.zsh
     - 40-functions.zsh
 
-- name: Symlink required profile zsh config files to .zsh.d
+- name: Symlink profile zsh config files to .zsh.d
   file:
     src: "{{ dotfiles_dest }}/zsh/profiles/{{ machine_profile }}/{{ item }}"
     dest: "{{ target_home }}/.zsh.d/{{ item }}"
@@ -284,27 +284,9 @@
   become: yes
   become_user: "{{ target_user }}"
   loop:
+    - plugins.zsh
     - config.zsh
     - overrides.zsh
-
-- name: Check if profile plugins.zsh exists
-  stat:
-    path: "{{ dotfiles_dest }}/zsh/profiles/{{ machine_profile }}/plugins.zsh"
-  register: profile_plugins_file
-  become: yes
-  become_user: "{{ target_user }}"
-
-- name: Symlink profile plugins.zsh if it exists
-  file:
-    src: "{{ dotfiles_dest }}/zsh/profiles/{{ machine_profile }}/plugins.zsh"
-    dest: "{{ target_home }}/.zsh.d/plugins.zsh"
-    state: link
-    owner: "{{ target_user }}"
-    group: "{{ target_group }}"
-    force: yes
-  become: yes
-  become_user: "{{ target_user }}"
-  when: profile_plugins_file.stat.exists
 
 - name: Create machine type marker file
   copy:
