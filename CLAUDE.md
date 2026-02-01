@@ -6,11 +6,13 @@ Guidance for Claude Code when working in the ansible-playbooks repository.
 
 Before editing, writing, or deleting any file, you MUST:
 
-1. **Check your branch** - Are you on a feature branch?
+1. **Check your branch** - Is the current branch appropriate for this work?
    ```bash
    git branch --show-current
    ```
-   If on `main` or wrong branch:
+   Create a new branch if:
+   - You're on `main`, OR
+   - The current branch is for a different/unrelated feature
    ```bash
    git checkout main && git pull origin main
    git checkout -b claude/<brief-description>
