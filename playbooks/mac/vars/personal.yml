@@ -38,17 +38,14 @@ homebrew_installed_packages:
   - jq
   - pygments
 
-homebrew_taps:
-  - homebrew/core
-  - homebrew/cask
+homebrew_taps: []
+  # homebrew/core and homebrew/cask are built-in to modern Homebrew
 
 homebrew_cask_appdir: /Applications
 homebrew_cask_apps:
   - sublime-text
   - vagrant
   - visual-studio-code
-  - spotify
-  - qlmarkdown
 
 # Package managers (configure as needed)
 # These are only installed if you add packages to the lists

@@ -24,14 +24,12 @@ homebrew_installed_packages:
   - kubectl
   - helm
   - k9s
+  - gh
 
 # Work applications
 homebrew_cask_apps:
   - sublime-text
   - visual-studio-code
-  - slack
-  - zoom
-  - docker
 
 # Note: Sensitive company-specific configurations are in mac-playbook-work repo
 # This file only contains non-sensitive work tooling
