@@ -40,7 +40,7 @@ deps: ## Install Ansible Galaxy dependencies
 
 install: deps ## Install pre-commit hooks and dependencies
 	@printf '$(BLUE)Installing pre-commit hooks...$(NC)\n'
-	pip install pre-commit
+	pip3 install pre-commit
 	pre-commit install
 	@printf '$(GREEN)✅ Setup complete!$(NC)\n'
 

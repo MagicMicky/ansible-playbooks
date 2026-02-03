@@ -13,10 +13,3 @@ collections:
 roles:
   # macOS roles (used by playbooks/mac/*.yml)
   - name: elliotweiser.osx-command-line-tools
-
-  # Work-specific role (private repository)
-  # Used by playbooks/mac/work.yml
-  - src: git@github.com:MagicMicky/mac-playbook-work.git
-    name: work-tasks
-    version: master
-    scm: git

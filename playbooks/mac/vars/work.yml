@@ -8,6 +8,10 @@ machine_profile: pro
 # Enable work-specific tasks
 configure_work: true
 
+# HashiCorp tap for official Terraform builds
+homebrew_taps:
+  - hashicorp/tap
+
 # Work-specific packages (non-sensitive)
 homebrew_installed_packages:
   - awscli
@@ -20,7 +24,7 @@ homebrew_installed_packages:
   - wget
   - jq
   - pygments
-  - terraform
+  - hashicorp/tap/terraform
   - kubectl
   - helm
   - k9s

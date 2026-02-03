@@ -44,13 +44,20 @@
     - role: app-config
       tags: ['apps', 'config']
 
-    # Work-specific tasks from private repository
-    # NOTE: Requires mac-playbook-work to be installed via ansible-galaxy
-    - role: work-tasks
-      when: configure_work | default(false)
+  tasks:
+    # Clone and run work-specific tasks from private repository
+    - name: Clone mac-playbook-work repository
+      ansible.builtin.git:
+        repo: git@github.com:MagicMicky/mac-playbook-work.git
+        dest: "{{ ansible_env.HOME }}/Development/mac-playbook-work"
+        version: master
+        accept_hostkey: true
       tags: ['work']
 
-  tasks:
+    - name: Run work-specific tasks
+      ansible.builtin.include_tasks:
+        file: "{{ ansible_env.HOME }}/Development/mac-playbook-work/tasks/main.yml"
+      tags: ['work']
     # Install extra packages if any are defined
     - name: Install extra packages
       ansible.builtin.import_tasks: tasks/extra-packages.yml
