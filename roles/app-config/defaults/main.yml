@@ -9,6 +9,9 @@ configure_git: true
 # Claude Code configuration
 configure_claude: true
 
+# kitty terminal configuration (macOS only)
+configure_kitty: true
+
 # -----------------------------------------------------------------------------
 # LEGACY CONFIGS - DISABLED
 # TODO: These configs are outdated (unchanged for years in dotfiles repo).

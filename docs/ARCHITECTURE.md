@@ -75,13 +75,13 @@ mac/personal.yml
 ├── geerlingguy.mac.homebrew    # Homebrew packages & casks
 ├── common-shell                 # Shell setup (zinit, starship, tools)
 ├── mac-system                   # macOS preferences & fonts
-└── app-config                   # Git + Claude configs
+└── app-config                   # Git + Claude + kitty configs
 
 mac/work.yml
 ├── geerlingguy.mac.homebrew    # Homebrew packages & casks
 ├── common-shell                 # Shell setup (pro profile)
 ├── mac-system                   # macOS preferences & fonts
-├── app-config                   # Git + Claude configs
+├── app-config                   # Git + Claude + kitty configs
 └── work-tasks                   # Work-specific (from private repo)
 
 wsl/setup.yml
@@ -97,7 +97,7 @@ servers/setup.yml
 | Role | Platform | Purpose |
 |------|----------|---------|
 | `common-shell` | All | Shell config (zinit, starship, modern tools) |
-| `app-config` | All | Application configs (git, claude; legacy disabled) |
+| `app-config` | All | Application configs (git, claude, kitty; legacy disabled) |
 | `mac-system` | macOS | System preferences, fonts |
 | `server-base` | Linux | Base packages, Docker, users |
 | `geerlingguy.mac.homebrew` | macOS | Package management (external) |
