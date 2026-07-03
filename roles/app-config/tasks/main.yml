@@ -16,6 +16,13 @@
     - configure_iterm | default(true)
   tags: ['iterm']
 
+- name: Include kitty configuration
+  import_tasks: kitty.yml
+  when:
+    - ansible_os_family == "Darwin"
+    - configure_kitty | default(true)
+  tags: ['kitty']
+
 - name: Include Vim configuration
   import_tasks: vim.yml
   when: configure_vim | default(true)

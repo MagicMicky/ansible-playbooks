@@ -1,0 +1,24 @@
+---
+# kitty terminal configuration (macOS)
+# Source of truth lives in dotfiles/macspecial/kitty/
+
+- name: Ensure kitty config directory present
+  file:
+    path: "~/.config/kitty"
+    state: directory
+    mode: '0755'
+  become: no
+  tags: ['kitty-settings']
+
+- name: Link kitty config files
+  file:
+    src: "{{ dotfiles_repo_local_destination }}/macspecial/kitty/{{ item }}"
+    dest: "~/.config/kitty/{{ item }}"
+    state: link
+    force: yes
+  become: no
+  loop:
+    - kitty.conf
+    - current-theme.conf
+    - shortcuts.txt
+  tags: ['kitty-settings']

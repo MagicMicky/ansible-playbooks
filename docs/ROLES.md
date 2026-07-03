@@ -21,7 +21,7 @@ The consolidated repository provides 4 shared roles that implement the DRY princ
 |------|---------|---------|
 | `common-shell` | Modern shell configuration (zinit, starship) | All platforms |
 | `mac-system` | macOS system preferences and fonts | Mac playbooks |
-| `app-config` | Application configs (git, claude; legacy disabled) | All platforms |
+| `app-config` | Application configs (git, claude, kitty; legacy disabled) | All platforms |
 | `server-base` | Base server setup (packages, Docker, users) | Server playbooks |
 
 All roles are idempotent and can be run multiple times safely.
@@ -248,6 +248,7 @@ roles:
 Configures application settings by linking config files from dotfiles:
 - **Git** - Links `~/.gitconfig`
 - **Claude Code** - Links settings and statusline script
+- **kitty** - Links kitty terminal config (macOS)
 
 **Legacy (disabled)**: Sublime Text, iTerm2, Vim - see [Issue #3](https://github.com/MagicMicky/ansible-playbooks/issues/3)
 
@@ -257,6 +258,7 @@ Configures application settings by linking config files from dotfiles:
 # Active configurations
 configure_git: true      # Links ~/.gitconfig
 configure_claude: true   # Links ~/.claude/settings.json + statusline.sh
+configure_kitty: true    # macOS only - links ~/.config/kitty/*
 
 # Legacy configurations (disabled by default - need review)
 configure_sublime: false  # macOS only
@@ -287,6 +289,10 @@ roles:
 - Ensures `~/.claude` directory exists
 - Links `settings.json` from dotfiles
 - Links `statusline.sh` from dotfiles
+
+**kitty.yml** (active, macOS only):
+- Ensures `~/.config/kitty` directory exists
+- Links `kitty.conf`, `current-theme.conf`, `shortcuts.txt` from dotfiles
 
 **sublime.yml** (disabled):
 - Ensure Sublime Text User directory exists
