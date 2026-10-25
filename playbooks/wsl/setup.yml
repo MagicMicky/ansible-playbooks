@@ -54,6 +54,8 @@
         state: present
         update_cache: true
       become: true
+      # Repo isn't really added in --check mode, so the package can't resolve yet
+      ignore_errors: "{{ ansible_check_mode }}"
       tags: ['prerequisites', 'github-cli']
 
     # 1Password desktop app lives on the Windows side; WSL only gets the CLI
@@ -81,6 +83,8 @@
         state: present
         update_cache: true
       become: true
+      # Repo isn't really added in --check mode, so the package can't resolve yet
+      ignore_errors: "{{ ansible_check_mode }}"
       tags: ['prerequisites', '1password']
 
   roles:
