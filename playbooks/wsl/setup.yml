@@ -37,6 +37,7 @@
         url: https://cli.github.com/packages/githubcli-archive-keyring.gpg
         dest: /usr/share/keyrings/githubcli-archive-keyring.gpg
         mode: '0644'
+        force: true  # re-download so key rotations are picked up
       become: true
       tags: ['prerequisites', 'github-cli']
 
@@ -64,6 +65,7 @@
         url: https://downloads.1password.com/linux/keys/1password.asc
         dest: /usr/share/keyrings/1password-archive-keyring.asc
         mode: '0644'
+        force: true  # re-download so key rotations are picked up
       become: true
       tags: ['prerequisites', '1password']
 
