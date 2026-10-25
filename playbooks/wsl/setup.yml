@@ -33,10 +33,10 @@
       tags: ['prerequisites']
 
     - name: Add GitHub CLI GPG key
-      ansible.builtin.apt_key:
+      ansible.builtin.get_url:
         url: https://cli.github.com/packages/githubcli-archive-keyring.gpg
-        keyring: /usr/share/keyrings/githubcli-archive-keyring.gpg
-        state: present
+        dest: /usr/share/keyrings/githubcli-archive-keyring.gpg
+        mode: '0644'
       become: true
       tags: ['prerequisites', 'github-cli']
 
@@ -54,7 +54,38 @@
         state: present
         update_cache: true
       become: true
+      # Repo isn't really added in --check mode, so the package can't resolve yet
+      ignore_errors: "{{ ansible_check_mode }}"
       tags: ['prerequisites', 'github-cli']
+
+    # 1Password desktop app lives on the Windows side; WSL only gets the CLI
+    - name: Add 1Password GPG key
+      ansible.builtin.get_url:
+        url: https://downloads.1password.com/linux/keys/1password.asc
+        dest: /usr/share/keyrings/1password-archive-keyring.asc
+        mode: '0644'
+      become: true
+      tags: ['prerequisites', '1password']
+
+    - name: Add 1Password repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch={{ op_arch }} signed-by=/usr/share/keyrings/1password-archive-keyring.asc] https://downloads.1password.com/linux/debian/{{ op_arch }} stable main"
+        filename: 1password
+        state: present
+      vars:
+        op_arch: "{{ ansible_architecture | replace('x86_64', 'amd64') | replace('aarch64', 'arm64') }}"
+      become: true
+      tags: ['prerequisites', '1password']
+
+    - name: Install 1Password CLI
+      ansible.builtin.apt:
+        name: 1password-cli
+        state: present
+        update_cache: true
+      become: true
+      # Repo isn't really added in --check mode, so the package can't resolve yet
+      ignore_errors: "{{ ansible_check_mode }}"
+      tags: ['prerequisites', '1password']
 
   roles:
     - role: common-shell
