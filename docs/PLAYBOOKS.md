@@ -20,7 +20,7 @@ Located in `playbooks/mac/`
 **Purpose**: Configure personal macOS machines with full development environment.
 
 **What It Does**:
-- Installs Homebrew packages and casks
+- Installs Homebrew packages and casks (incl. 1Password app + `op` CLI)
 - Configures modern shell (zinit, starship, modern tools)
 - Sets macOS system preferences (Dock, Finder, keyboard)
 - Installs and configures fonts (Menlo Powerline)
@@ -106,6 +106,7 @@ Located in `playbooks/wsl/setup.yml`
 **What It Does**:
 - Configures modern shell with WSL-specific profile
 - Installs Linux modern tools: fzf, zoxide, ripgrep
+- Installs GitHub CLI and 1Password CLI (`op`) from their official apt repos (1Password desktop app stays on Windows)
 - Sets up WSL-specific aliases and integrations
 - Installs Docker and WSL-specific completions
 
