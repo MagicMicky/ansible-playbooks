@@ -67,16 +67,45 @@
   become_user: "{{ target_user }}"
   register: zoxide_binary
 
-- name: Install zoxide (Linux)
-  shell: curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
-  become: yes
-  become_user: "{{ target_user }}"
-  environment:
-    HOME: "{{ target_home }}"
+# Install the latest zoxide GitHub release without the GitHub API: the upstream
+# install.sh queries api.github.com, which rate-limits shared CI runner IPs.
+# The latest tag comes from the releases/latest web redirect instead.
+- name: Install latest zoxide release (Linux)
   when:
     - not is_macos
     - not zoxide_binary.stat.exists
-  changed_when: true
+    - not ansible_check_mode
+  block:
+    - name: Resolve latest zoxide release tag
+      uri:
+        url: https://github.com/ajeetdsouza/zoxide/releases/latest
+        method: HEAD
+        follow_redirects: none
+        status_code: [301, 302]
+      register: zoxide_latest
+      until: zoxide_latest.location is defined
+      retries: 3
+      delay: 10
+
+    - name: Set zoxide release facts
+      set_fact:
+        zoxide_version: "{{ zoxide_latest.location | regex_replace('^.*/tag/v?', '') }}"
+        zoxide_arch: "{{ {'x86_64': 'x86_64', 'aarch64': 'aarch64', 'arm64': 'aarch64'}[ansible_architecture] }}"
+
+    - name: Download and extract zoxide binary
+      unarchive:
+        src: "https://github.com/ajeetdsouza/zoxide/releases/download/v{{ zoxide_version }}/zoxide-{{ zoxide_version }}-{{ zoxide_arch }}-unknown-linux-musl.tar.gz"
+        dest: "{{ target_home }}/.local/bin"
+        remote_src: yes
+        include:
+          - zoxide
+        mode: '0755'
+      become: yes
+      become_user: "{{ target_user }}"
+      register: zoxide_download
+      until: zoxide_download is succeeded
+      retries: 3
+      delay: 10
 
 # Note: bat and eza installation on Linux may require additional steps
 # They can be installed via cargo, snap, or downloaded from GitHub releases
