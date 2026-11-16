@@ -140,7 +140,7 @@ servers/setup.yml
 | **Zinit** | Plugin manager | Git clone |
 | **Starship** | Cross-shell prompt | curl installer |
 | **fzf** | Fuzzy finder | Git clone |
-| **zoxide** | Smart cd | curl installer |
+| **zoxide** | Smart cd | GitHub release / brew |
 | **bat** | Better cat | apt/brew |
 | **eza** | Better ls | apt/brew |
 | **fd** | Better find | apt/brew |
